@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TreeTask V2 - Interactive Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-hover: #273549;
+      --border: #334155;
+      --primary: #6366f1;
+      --primary-light: #818cf8;
+      --secondary: #10b981;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --weight-low: #10b981;
+      --weight-med: #f59e0b;
+      --weight-high: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 80px;
+    }
+    .app-container {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 4px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+    }
+    .brand h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    .header-actions { display: flex; gap: 8px; }
+    .btn-icon {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-icon:hover { background: var(--surface-hover); border-color: var(--primary); }
+    .stats-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .progress-circle {
+      position: relative;
+      width: 58px;
+      height: 58px;
+      flex-shrink: 0;
+    }
+    .progress-circle svg { transform: rotate(-90deg); width: 58px; height: 58px; }
+    .progress-circle circle {
+      fill: none;
+      stroke-width: 6;
+      stroke-linecap: round;
+    }
+    .circle-bg { stroke: rgba(255,255,255,0.08); }
+    .circle-val {
+      stroke: var(--primary);
+      stroke-dasharray: 157;
+      stroke-dashoffset: 157;
+      transition: stroke-dashoffset 0.4s ease;
+    }
+    .progress-percent {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .stats-info h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .stats-info p { font-size: 13px; color: var(--text-muted); }
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 13px;
+      overflow-x: auto;
+    }
+    .crumb-link {
+      color: var(--primary-light);
+      cursor: pointer;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .crumb-link:hover { text-decoration: underline; }
+    .crumb-sep { color: var(--text-muted); font-size: 12px; }
+    .crumb-active { color: var(--text); font-weight: 700; white-space: nowrap; }
+    .tree-container { display: flex; flex-direction: column; gap: 8px; }
+    .task-node {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .task-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      transition: all 0.2s;
+    }
+    .task-card:hover { border-color: rgba(99, 102, 241, 0.4); }
+    .task-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .custom-check {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .custom-check.checked {
+      background: var(--secondary);
+      border-color: var(--secondary);
+    }
+    .custom-check.checked::after {
+      content: "?";
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .task-title-block { flex: 1; min-width: 0; }
+    .task-title {
+      font-size: 14px;
+      font-weight: 600;
+      word-break: break-word;
+    }
+    .task-title.done {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+    .task-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .weight-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .weight-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .weight-pill.low {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: var(--weight-low);
+    }
+    .weight-pill.low .weight-dot { background: var(--weight-low); }
+    .weight-pill.med {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: var(--weight-med);
+    }
+    .weight-pill.med .weight-dot { background: var(--weight-med); }
+    .weight-pill.high {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: var(--weight-high);
+    }
+    .weight-pill.high .weight-dot { background: var(--weight-high); }
+    .chevron-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease;
+    }
+    .chevron-btn.rotated { transform: rotate(90deg); }
+    .card-actions { display: flex; align-items: center; gap: 4px; }
+    .action-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+    }
+    .action-btn:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .task-progress-block {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+    .progress-bar-track {
+      width: 100%;
+      height: 5px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    .progress-bar-fill.done {
+      background: var(--secondary);
+    }
+    .children-container {
+      margin-left: 20px;
+      padding-left: 14px;
+      border-left: 2px solid var(--border);
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--primary);
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(99,102,241,0.4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .fab:hover { transform: translateY(-2px); background: var(--primary-light); }
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 480px;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .modal-header h2 { font-size: 18px; font-weight: 800; }
+    .input-group { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
+    .input-group label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+    .input-field {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+    }
+    .input-field:focus { outline: none; border-color: var(--primary); }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .slider-val-badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .range-slider {
+      width: 100%;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .btn-primary {
+      background: var(--primary);
+      border: none;
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 18a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2"></path><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="12" cy="10" r="2"></circle></svg>
+        </div>
+        <div>
+          <h1>TreeTask V2</h1>
+          <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">INFINITE NESTED & WEIGHTED (1-10)</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-icon" title="Expand All" onclick="toggleAll(true)">?</button>
+        <button class="btn-icon" title="Collapse All" onclick="toggleAll(false)">?</button>
+      </div>
+    </header>
+
+    <div class="breadcrumbs" id="breadcrumbBar" style="display:none;">
+      <span class="crumb-link" onclick="exitFocus()">All Projects</span>
+      <span class="crumb-sep">?</span>
+      <span class="crumb-active" id="currentCrumb">Branch</span>
+    </div>
+
+    <div class="stats-card" id="statsCard">
+      <div class="progress-circle">
+        <svg>
+          <circle class="circle-bg" cx="29" cy="29" r="25"></circle>
+          <circle class="circle-val" id="overallCircle" cx="29" cy="29" r="25"></circle>
+        </svg>
+        <div class="progress-percent" id="overallPercent">0%</div>
+      </div>
+      <div class="stats-info">
+        <h3>Weighted Completion</h3>
+        <p id="statsSubtitle">0 Projects ? 0 Subtasks</p>
+      </div>
+    </div>
+
+    <div class="tree-container" id="treeRoot"></div>
+  </div>
+
+  <button class="fab" onclick="openCreateModal()">
+    <span>+</span> <span id="fabLabel">New Project</span>
+  </button>
+
+  <!-- Modal Dialog -->
+  <div class="modal-overlay" id="taskModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="modalTitle">New Project</h2>
+        <button class="action-btn" onclick="closeModal()">?</button>
+      </div>
+      <div class="input-group">
+        <label>Task Title</label>
+        <input type="text" class="input-field" id="taskNameInput" placeholder="e.g. Set up Backend Database" autofocus>
+      </div>
+      <div class="input-group">
+        <label>Description (Optional)</label>
+        <textarea class="input-field" id="taskDescInput" rows="2" placeholder="Details or acceptance criteria..."></textarea>
+      </div>
+      <div class="input-group">
+        <div class="slider-row">
+          <label>Weightage (Effort / Importance):</label>
+          <span class="slider-val-badge" id="weightBadgePreview">5 / 10 (Moderate)</span>
+        </div>
+        <input type="range" class="range-slider" id="weightSlider" min="1" max="10" value="5" oninput="updateWeightPreview(this.value)">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveModalTask()">Save Task</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let focusId = null;
+    let modalParentId = null;
+    let editingTaskId = null;
+
+    let tasks = [
+      {
+        id: '1',
+        name: 'Launch Mobile App',
+        desc: 'Prepare complete launch strategy and release engineering',
+        weight: 9,
+        isDone: false,
+        expanded: true,
+        children: [
+          {
+            id: '1-1',
+            name: 'Backend Architecture',
+            desc: 'Scalable cloud infrastructure & database',
+            weight: 8,
+            isDone: false,
+            expanded: true,
+            children: [
+              { id: '1-1-1', name: 'Database Schema Design', desc: 'PostgreSQL relational schemas with migrations', weight: 6, isDone: true, expanded: true, children: [] },
+              { id: '1-1-2', name: 'Authentication & Security', desc: 'OAuth2 and JWT token session management', weight: 8, isDone: true, expanded: true, children: [] },
+              { id: '1-1-3', name: 'Load Balancing & Caching', desc: 'Redis cluster setup', weight: 5, isDone: false, expanded: true, children: [] }
+            ]
+          },
+          {
+            id: '1-2',
+            name: 'UI & User Experience',
+            desc: 'Material 3 design system with animations',
+            weight: 7,
+            isDone: false,
+            expanded: true,
+            children: [
+              { id: '1-2-1', name: 'Design System & Figma Tokens', desc: '', weight: 7, isDone: true, expanded: true, children: [] },
+              { id: '1-2-2', name: 'Dark Mode & Micro-Interactions', desc: '', weight: 4, isDone: false, expanded: true, children: [] }
+            ]
+          },
+          { id: '1-3', name: 'App Store & Marketing Assets', desc: 'Screenshots and promo video', weight: 4, isDone: false, expanded: true, children: [] }
+        ]
+      },
+      {
+        id: '2',
+        name: 'Personal Fitness Goals',
+        desc: 'Quarterly workout routines & nutrition',
+        weight: 6,
+        isDone: false,
+        expanded: false,
+        children: [
+          { id: '2-1', name: 'Morning Cardio (30 mins)', desc: '', weight: 5, isDone: true, expanded: true, children: [] },
+          { id: '2-2', name: 'Meal Prep & Protein Targets', desc: '', weight: 7, isDone: false, expanded: true, children: [] }
+        ]
+      }
+    ];
+
+    function calculateProgress(task) {
+      if (!task.children || task.children.length === 0) {
+        return task.isDone ? 1.0 : 0.0;
+      }
+      const totalWeight = task.children.reduce((sum, c) => sum + c.weight, 0);
+      if (totalWeight === 0) return task.isDone ? 1.0 : 0.0;
+      const weightedSum = task.children.reduce((sum, c) => sum + (calculateProgress(c) * c.weight), 0);
+      return Math.min(1.0, Math.max(0.0, weightedSum / totalWeight));
+    }
+
+    function calculateTotalSubtasks(list) {
+      let count = list.length;
+      for (const t of list) {
+        if (t.children) count += calculateTotalSubtasks(t.children);
+      }
+      return count;
+    }
+
+    function getWeightTier(w) {
+      if (w <= 3) return { class: 'low', label: 'Minor' };
+      if (w <= 7) return { class: 'med', label: 'Moderate' };
+      return { class: 'high', label: 'Critical' };
+    }
+
+    function findTaskById(list, id) {
+      for (const t of list) {
+        if (t.id === id) return t;
+        if (t.children) {
+          const found = findTaskById(t.children, id);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    function setDoneRecursive(task, done) {
+      task.isDone = done;
+      if (task.children) {
+        task.children.forEach(c => setDoneRecursive(c, done));
+      }
+    }
+
+    function renderTree() {
+      const container = document.getElementById('treeRoot');
+      container.innerHTML = '';
+
+      let sourceList = tasks;
+      if (focusId) {
+        const focused = findTaskById(tasks, focusId);
+        if (focused) {
+          sourceList = focused.children;
+          document.getElementById('breadcrumbBar').style.display = 'flex';
+          document.getElementById('currentCrumb').innerText = focused.name;
+          document.getElementById('fabLabel').innerText = 'Add Subtask';
+          document.getElementById('statsCard').style.display = 'none';
+        } else {
+          focusId = null;
+        }
+      }
+
+      if (!focusId) {
+        document.getElementById('breadcrumbBar').style.display = 'none';
+        document.getElementById('fabLabel').innerText = 'New Project';
+        document.getElementById('statsCard').style.display = 'flex';
+        updateOverallStats();
+      }
+
+      sourceList.forEach(t => container.appendChild(createTaskElement(t, 0, null)));
+    }
+
+    function createTaskElement(task, depth, parentWeight) {
+      const prog = calculateProgress(task);
+      const isComplete = prog >= 0.999;
+      const hasChildren = task.children && task.children.length > 0;
+      const tier = getWeightTier(task.weight);
+      const contrib = parentWeight ? Math.round((task.weight / parentWeight) * 100) : null;
+
+      const node = document.createElement('div');
+      node.className = 'task-node';
+
+      const card = document.createElement('div');
+      card.className = 'task-card';
+
+      card.innerHTML = `
+        <div class="task-header">
+          <div class="custom-check ${isComplete ? 'checked' : ''}" onclick="toggleDone('${task.id}')"></div>
+          <div class="task-title-block">
+            <div class="task-title ${isComplete ? 'done' : ''}">${escapeHtml(task.name)}</div>
+            ${task.desc ? `<div class="task-desc">${escapeHtml(task.desc)}</div>` : ''}
+          </div>
+          <div class="weight-pill ${tier.class}">
+            <div class="weight-dot"></div>
+            W: ${task.weight} ${contrib ? `(${contrib}%)` : ''}
+          </div>
+          ${hasChildren ? `
+            <button class="chevron-btn ${task.expanded ? 'rotated' : ''}" onclick="toggleExpand('${task.id}')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+          ` : ''}
+          <div class="card-actions">
+            <button class="action-btn" title="Add Subtask" onclick="openAddChild('${task.id}')">?</button>
+            ${hasChildren ? `<button class="action-btn" title="Focus into branch" onclick="drillDown('${task.id}')">??</button>` : ''}
+            <button class="action-btn" title="Edit" onclick="openEdit('${task.id}')">??</button>
+            <button class="action-btn" title="Delete" onclick="deleteTask('${task.id}')">???</button>
+          </div>
+        </div>
+        ${hasChildren ? `
+          <div class="task-progress-block">
+            <div class="progress-meta">
+              <span>Weighted Score</span>
+              <span><strong>${Math.round(prog * 100)}%</strong></span>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill ${isComplete ? 'done' : ''}" style="width: ${Math.round(prog * 100)}%"></div>
+            </div>
+          </div>
+        ` : ''}
+      `;
+
+      node.appendChild(card);
+
+      if (hasChildren && task.expanded) {
+        const childrenBox = document.createElement('div');
+        childrenBox.className = 'children-container';
+        const totalW = task.children.reduce((s, c) => s + c.weight, 0);
+        task.children.forEach(c => {
+          childrenBox.appendChild(createTaskElement(c, depth + 1, totalW));
+        });
+        node.appendChild(childrenBox);
+      }
+
+      return node;
+    }
+
+    function updateOverallStats() {
+      const totalW = tasks.reduce((s, t) => s + t.weight, 0);
+      let overall = 0;
+      if (totalW > 0) {
+        const weightedSum = tasks.reduce((s, t) => s + (calculateProgress(t) * t.weight), 0);
+        overall = Math.round((weightedSum / totalW) * 100);
+      }
+      document.getElementById('overallPercent').innerText = overall + '%';
+      const offset = 157 - (157 * overall / 100);
+      document.getElementById('overallCircle').style.strokeDashoffset = offset;
+      const totalCount = calculateTotalSubtasks(tasks);
+      document.getElementById('statsSubtitle').innerText = `${tasks.length} Projects ? ${totalCount} Total Subtasks`;
+    }
+
+    function toggleDone(id) {
+      const task = findTaskById(tasks, id);
+      if (task) {
+        const newDone = !(calculateProgress(task) >= 0.999);
+        setDoneRecursive(task, newDone);
+        renderTree();
+      }
+    }
+
+    function toggleExpand(id) {
+      const task = findTaskById(tasks, id);
+      if (task) {
+        task.expanded = !task.expanded;
+        renderTree();
+      }
+    }
+
+    function toggleAll(expand) {
+      function recurse(list) {
+        list.forEach(t => {
+          t.expanded = expand;
+          if (t.children) recurse(t.children);
+        });
+      }
+      recurse(tasks);
+      renderTree();
+    }
+
+    function drillDown(id) {
+      focusId = id;
+      renderTree();
+    }
+
+    function exitFocus() {
+      focusId = null;
+      renderTree();
+    }
+
+    function deleteTask(id) {
+      function removeRecursive(list) {
+        const idx = list.findIndex(t => t.id === id);
+        if (idx !== -1) {
+          list.splice(idx, 1);
+          return true;
+        }
+        for (const t of list) {
+          if (t.children && removeRecursive(t.children)) return true;
+        }
+        return false;
+      }
+      if (confirm('Delete this task and all its subtasks?')) {
+        removeRecursive(tasks);
+        if (focusId === id) focusId = null;
+        renderTree();
+      }
+    }
+
+    function updateWeightPreview(val) {
+      const tier = getWeightTier(parseInt(val));
+      const badge = document.getElementById('weightBadgePreview');
+      badge.innerText = `${val} / 10 (${tier.label})`;
+      badge.className = `slider-val-badge ${tier.class}`;
+    }
+
+    function openCreateModal() {
+      editingTaskId = null;
+      modalParentId = focusId;
+      document.getElementById('modalTitle').innerText = focusId ? 'Add Subtask' : 'New Project';
+      document.getElementById('taskNameInput').value = '';
+      document.getElementById('taskDescInput').value = '';
+      document.getElementById('weightSlider').value = 5;
+      updateWeightPreview(5);
+      document.getElementById('taskModal').classList.add('active');
+      setTimeout(() => document.getElementById('taskNameInput').focus(), 50);
+    }
+
+    function openAddChild(parentId) {
+      editingTaskId = null;
+      modalParentId = parentId;
+      const parent = findTaskById(tasks, parentId);
+      document.getElementById('modalTitle').innerText = `Add Subtask to: ${parent ? parent.name : ''}`;
+      document.getElementById('taskNameInput').value = '';
+      document.getElementById('taskDescInput').value = '';
+      document.getElementById('weightSlider').value = 5;
+      updateWeightPreview(5);
+      document.getElementById('taskModal').classList.add('active');
+      setTimeout(() => document.getElementById('taskNameInput').focus(), 50);
+    }
+
+    function openEdit(id) {
+      const task = findTaskById(tasks, id);
+      if (!task) return;
+      editingTaskId = id;
+      document.getElementById('modalTitle').innerText = 'Edit Task';
+      document.getElementById('taskNameInput').value = task.name;
+      document.getElementById('taskDescInput').value = task.desc || '';
+      document.getElementById('weightSlider').value = task.weight;
+      updateWeightPreview(task.weight);
+      document.getElementById('taskModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('taskModal').classList.remove('active');
+    }
+
+    function saveModalTask() {
+      const name = document.getElementById('taskNameInput').value.trim();
+      if (!name) return;
+      const desc = document.getElementById('taskDescInput').value.trim();
+      const weight = parseInt(document.getElementById('weightSlider').value);
+
+      if (editingTaskId) {
+        const task = findTaskById(tasks, editingTaskId);
+        if (task) {
+          task.name = name;
+          task.desc = desc;
+          task.weight = weight;
+        }
+      } else {
+        const newTask = {
+          id: Date.now().toString(),
+          name,
+          desc,
+          weight,
+          isDone: false,
+          expanded: true,
+          children: []
+        };
+        if (modalParentId) {
+          const parent = findTaskById(tasks, modalParentId);
+          if (parent) {
+            parent.children.push(newTask);
+            parent.expanded = true;
+          }
+        } else {
+          tasks.unshift(newTask);
+        }
+      }
+      closeModal();
+      renderTree();
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Initialize
+    renderTree();
+  </script>
+</body>
+</html>
