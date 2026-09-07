@@ -29,6 +29,11 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Setup Android Scaffolding
+        run: |
+          rm -rf android
+          flutter create . --platforms=android --org=com.ghsoft --project-name=treetask_v2
+
       - name: Get Dependencies
         run: flutter pub get
 
