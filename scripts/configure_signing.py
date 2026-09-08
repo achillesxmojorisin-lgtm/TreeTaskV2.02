@@ -96,8 +96,8 @@ def configure():
         c = re.sub(r'compileSdk\s*=.*', 'compileSdk = 36', c)
         c = re.sub(r'targetSdkVersion\s+.*', 'targetSdkVersion 36', c)
         c = re.sub(r'targetSdk\s*=.*', 'targetSdk = 36', c)
-        c = re.sub(r'versionCode\s+.*', 'versionCode 7', c)
-        c = re.sub(r'versionName\s+.*', 'versionName "2.1.4"', c)
+        c = re.sub(r'versionCode\s+.*', 'versionCode 8', c)
+        c = re.sub(r'versionName\s+.*', 'versionName "2.1.5"', c)
 
         # Inject ndk debug symbols into release buildType if not already present
         if "debugSymbolLevel" not in c:
@@ -137,8 +137,8 @@ def configure():
         c_kts = re.sub(r'targetSdk\s*=.*', 'targetSdk = 36', c_kts)
         c_kts = re.sub(r'applicationId\s*=\s*["\'][^"\']+["\']', 'applicationId = "com.studioxanywhere.nested"', c_kts)
         c_kts = re.sub(r'namespace\s*=\s*["\'][^"\']+["\']', 'namespace = "com.studioxanywhere.nested"', c_kts)
-        c_kts = re.sub(r'versionCode\s*=.*', 'versionCode = 7', c_kts)
-        c_kts = re.sub(r'versionName\s*=.*', 'versionName = "2.1.4"', c_kts)
+        c_kts = re.sub(r'versionCode\s*=.*', 'versionCode = 8', c_kts)
+        c_kts = re.sub(r'versionName\s*=.*', 'versionName = "2.1.5"', c_kts)
 
         if "debugSymbolLevel" not in c_kts:
             c_kts = c_kts.replace(

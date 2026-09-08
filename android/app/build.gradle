@@ -28,11 +28,8 @@ android {
         applicationId "com.studioxanywhere.nested"
         minSdkVersion 21
         targetSdkVersion 36
-        versionCode 7
-        versionName "2.1.4"
-        ndk {
-            debugSymbolLevel 'FULL'
-        }
+        versionCode 8
+        versionName "2.1.5"
     }
 
     
