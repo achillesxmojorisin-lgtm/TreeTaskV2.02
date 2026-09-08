@@ -161,7 +161,41 @@ Whenever you push minor fixes, tweaks, or updates that do *not* require a new ve
 
 ---
 
-## 6. Cleaning Up Your Trial Accounts
+## 6. Official Google Play App Signing & Keystore Specifications 🔑
+
+A permanent 10,000-day RSA 2048-bit **Upload Keystore** has been generated for **Nested: Task Strategy**.
+
+### Keystore Metadata
+* **File Name**: `upload-keystore.jks`
+* **Local Master Backup**: `C:\Users\choud\Documents\Antigravity Workspace\Project 1\upload-keystore.jks`
+* **Alias**: `upload`
+* **Keystore Password**: `NestedStrategy2026`
+* **Key Password**: `NestedStrategy2026`
+* **Validity**: 10,000 days (valid through January 24, 2054)
+
+### Cryptographic Certificate Fingerprints
+* **SHA-1**: `AB:B6:CC:95:CD:71:97:B7:AB:DD:15:31:9D:C4:94:86:69:67:6D:1F`
+* **SHA-256**: `8A:CD:A9:41:26:FB:1D:2D:0B:F5:92:9F:22:66:10:91:1F:5A:93:BB:E0:32:BA:02:E6:91:71:74:61:F3:5D:FE`
+
+### Configuring Automated Signing in GitHub Actions
+To have GitHub Actions sign every production APK and AAB with this official key automatically:
+1. Go to your GitHub Repository:
+   `https://github.com/studioxanywhere-hub/Nested-TaskStrategy/settings/secrets/actions`
+2. Click **"New repository secret"** and add the following 4 secrets:
+
+| Secret Name | Value | Description |
+| :--- | :--- | :--- |
+| `KEYSTORE_PASSWORD` | `NestedStrategy2026` | Master password for the keystore |
+| `KEY_PASSWORD` | `NestedStrategy2026` | Password for the key alias |
+| `KEY_ALIAS` | `upload` | Alias name of the key entry |
+| `KEYSTORE_BASE64` | *(Base64 string from scratch/keystore_base64_utf8.txt)* | Complete binary keystore encoded in Base64 |
+
+> [!IMPORTANT]
+> Keep `upload-keystore.jks` stored in a safe backup location (e.g. Google Drive, USB, or password manager). This is the master upload key for the life of the app on Google Play.
+
+---
+
+## 7. Cleaning Up Your Trial Accounts
 
 Once you have verified that your permanent GitHub repository has the code and the Actions run produces your artifacts:
 1. Go to your temporary GitHub account (`achillesxmojorisin-lgtm`).

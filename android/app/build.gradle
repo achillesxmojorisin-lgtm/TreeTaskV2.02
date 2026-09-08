@@ -32,9 +32,27 @@ android {
         versionName "2.1.0"
     }
 
+    
+    def keystoreProperties = new Properties()
+    def keystorePropertiesFile = rootProject.file('key.properties')
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    }
+
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            if (keystorePropertiesFile.exists()) { signingConfig signingConfigs.release } else { signingConfig signingConfigs.debug }
             minifyEnabled false
             shrinkResources false
         }

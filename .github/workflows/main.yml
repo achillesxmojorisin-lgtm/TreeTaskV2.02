@@ -41,10 +41,57 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Android Scaffolding
+      - name: Setup Android Scaffolding & Release Signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           rm -rf android
           flutter create . --platforms=android --org=com.studioxanywhere --project-name=nested_task_strategy
+
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "Setting up official release signing keystore..."
+            echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+            cat <<EOF > android/key.properties
+storePassword=$KEYSTORE_PASSWORD
+keyPassword=$KEY_PASSWORD
+keyAlias=$KEY_ALIAS
+storeFile=upload-keystore.jks
+EOF
+            python3 -c '
+with open("android/app/build.gradle", "r") as f:
+    c = f.read()
+
+signing_block = """
+    def keystoreProperties = new Properties()
+    def keystorePropertiesFile = rootProject.file("key.properties")
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    }
+
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias keystoreProperties["keyAlias"]
+                keyPassword keystoreProperties["keyPassword"]
+                storeFile file(keystoreProperties["storeFile"])
+                storePassword keystoreProperties["storePassword"]
+            }
+        }
+    }
+"""
+c = c.replace("buildTypes {", signing_block + "\n    buildTypes {")
+c = c.replace("signingConfig signingConfigs.debug", "if (keystorePropertiesFile.exists()) { signingConfig signingConfigs.release } else { signingConfig signingConfigs.debug }")
+
+with open("android/app/build.gradle", "w") as f:
+    f.write(c)
+print("Configured release signing in android/app/build.gradle successfully.")
+'
+          else
+            echo "KEYSTORE_BASE64 secret not found; building with default signing."
+          fi
 
       - name: Get Dependencies
         run: flutter pub get
