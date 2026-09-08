@@ -49,7 +49,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           rm -rf android
-          flutter create . --platforms=android --org=com.studioxanywhere --project-name=nested_task_strategy
+          flutter create . --platforms=android --org=com.studioxanywhere --project-name=nested
           python3 scripts/configure_signing.py
 
       - name: Get Dependencies

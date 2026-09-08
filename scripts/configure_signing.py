@@ -79,13 +79,15 @@ def configure():
             c
         )
 
-        # Update package and version if needed
-        c = re.sub(r'versionCode\s+\d+', 'versionCode 4', c)
-        c = re.sub(r'versionName\s+["\'][^"\']+["\']', 'versionName "2.1.1"', c)
+        # Enforce exact package name and version
+        c = re.sub(r'applicationId\s+["\'][^"\']+["\']', 'applicationId "com.studioxanywhere.nested"', c)
+        c = re.sub(r'namespace\s+["\'][^"\']+["\']', 'namespace "com.studioxanywhere.nested"', c)
+        c = re.sub(r'versionCode\s+\d+', 'versionCode 5', c)
+        c = re.sub(r'versionName\s+["\'][^"\']+["\']', 'versionName "2.1.2"', c)
 
         with open(build_gradle, "w", encoding="utf-8") as f:
             f.write(c)
-        print("[Signing] Successfully patched android/app/build.gradle with official release signing!")
+        print("[Signing] Successfully patched android/app/build.gradle with official release signing and com.studioxanywhere.nested package!")
 
     # Step 4: Patch android/app/build.gradle.kts (Kotlin DSL if present)
     build_gradle_kts = "android/app/build.gradle.kts"
@@ -110,12 +112,24 @@ def configure():
             "signingConfig = signingConfigs.getByName(\"release\")",
             c_kts
         )
-        c_kts = re.sub(r'versionCode\s*=\s*\d+', 'versionCode = 4', c_kts)
-        c_kts = re.sub(r'versionName\s*=\s*["\'][^"\']+["\']', 'versionName = "2.1.1"', c_kts)
+        c_kts = re.sub(r'applicationId\s*=\s*["\'][^"\']+["\']', 'applicationId = "com.studioxanywhere.nested"', c_kts)
+        c_kts = re.sub(r'namespace\s*=\s*["\'][^"\']+["\']', 'namespace = "com.studioxanywhere.nested"', c_kts)
+        c_kts = re.sub(r'versionCode\s*=\s*\d+', 'versionCode = 5', c_kts)
+        c_kts = re.sub(r'versionName\s*=\s*["\'][^"\']+["\']', 'versionName = "2.1.2"', c_kts)
 
         with open(build_gradle_kts, "w", encoding="utf-8") as f:
             f.write(c_kts)
         print("[Signing] Successfully patched android/app/build.gradle.kts with official release signing!")
+
+    # Step 5: Ensure AndroidManifest.xml package matches
+    manifest_path = "android/app/src/main/AndroidManifest.xml"
+    if os.path.exists(manifest_path):
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            m = f.read()
+        m = re.sub(r'package\s*=\s*["\'][^"\']+["\']', 'package="com.studioxanywhere.nested"', m)
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            f.write(m)
+        print("[Signing] Ensured package='com.studioxanywhere.nested' in AndroidManifest.xml.")
 
     print("[Signing] Release signing configuration complete. Ready to build!")
 
