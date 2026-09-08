@@ -28,8 +28,8 @@ android {
         applicationId "com.studioxanywhere.nested"
         minSdkVersion 21
         targetSdkVersion 36
-        versionCode 8
-        versionName "2.1.5"
+        versionCode 9
+        versionName "2.1.6"
     }
 
     
@@ -55,9 +55,6 @@ android {
             if (keystorePropertiesFile.exists()) { signingConfig signingConfigs.release } else { signingConfig signingConfigs.release }
             minifyEnabled false
             shrinkResources false
-            ndk {
-                debugSymbolLevel 'FULL'
-            }
         }
     }
 }
