@@ -87,6 +87,13 @@
       align-items: center;
       gap: 20px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    .stats-card:hover {
+      border-color: var(--primary);
+      background: var(--surface-hover);
+      transform: translateY(-1px);
     }
     .progress-circle {
       position: relative;
@@ -412,7 +419,7 @@
         </div>
       </div>
       <div class="header-actions">
-        <button class="btn-icon" title="Strategy Insights & Feedback" onclick="openInsightsModal()">
+        <button class="btn-icon" title="Local Insights (See Your Own Data)" onclick="openInsightsModal()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
         </button>
         <button class="btn-icon" title="Expand All Branches" onclick="toggleAll(true)">
@@ -432,7 +439,7 @@
       <span class="crumb-active" id="currentCrumb">Branch</span>
     </div>
 
-    <div class="stats-card" id="statsCard">
+    <div class="stats-card" id="statsCard" onclick="openInsightsModal()" title="Click to view Local Insights & Strategy Profile">
       <div class="progress-circle">
         <svg>
           <circle class="circle-bg" cx="29" cy="29" r="25"></circle>
@@ -440,8 +447,13 @@
         </svg>
         <div class="progress-percent" id="overallPercent">0%</div>
       </div>
-      <div class="stats-info">
-        <h3>Weighted Completion</h3>
+      <div class="stats-info" style="flex: 1;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3>Weighted Completion</h3>
+          <span style="font-size: 11px; color: var(--primary-light); font-weight: 700; display: inline-flex; align-items: center; gap: 4px; background: rgba(99,102,241,0.15); padding: 3px 8px; border-radius: 8px;">
+            Insights &rarr;
+          </span>
+        </div>
         <p id="statsSubtitle">0 Projects &bull; 0 Subtasks</p>
       </div>
     </div>
@@ -925,13 +937,31 @@
       return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    function calculateOverallProgress(taskList) {
+      if (!taskList || taskList.length === 0) return 0;
+      const totalW = taskList.reduce((s, t) => s + (t.weight || 5), 0);
+      if (totalW === 0) return 0;
+      const weightedSum = taskList.reduce((s, t) => s + (calculateProgress(t) * (t.weight || 5)), 0);
+      return Math.round((weightedSum / totalW) * 100);
+    }
+
     function openInsightsModal() {
-      computeAndRenderInsights();
-      document.getElementById('insightsModal').classList.add('active');
+      try {
+        computeAndRenderInsights();
+      } catch (err) {
+        console.error('Error computing insights:', err);
+      }
+      const modal = document.getElementById('insightsModal');
+      if (modal) {
+        modal.classList.add('active');
+      }
     }
 
     function closeInsightsModal() {
-      document.getElementById('insightsModal').classList.remove('active');
+      const modal = document.getElementById('insightsModal');
+      if (modal) {
+        modal.classList.remove('active');
+      }
     }
 
     function getMaxTreeDepth(taskList) {
@@ -1083,6 +1113,21 @@
         }, 2000);
       });
     }
+
+    // Close modals on outside click or Escape key
+    window.addEventListener('click', (e) => {
+      const insightsModal = document.getElementById('insightsModal');
+      if (e.target === insightsModal) closeInsightsModal();
+      const taskModal = document.getElementById('taskModal');
+      if (e.target === taskModal) closeModal();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeInsightsModal();
+        closeModal();
+      }
+    });
 
     // Initialize
     renderTree();
