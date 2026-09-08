@@ -63,10 +63,14 @@ jobs:
         run: |
           set -o pipefail
           flutter build appbundle --release -v 2>&1 | tee bundle.log || {
-            echo "## :x: Play Store AAB Build Failed" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            tail -n 150 bundle.log >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "====================== FAILURE DIAGNOSTICS ======================"
+            grep -A 25 -B 5 "What went wrong:" bundle.log || tail -n 80 bundle.log
+            echo "================================================================"
+            ERR_MSG=$(grep -A 8 "What went wrong:" bundle.log | head -n 8 | tr '\n' ' ' | sed 's/"/\\"/g')
+            if [ -z "$ERR_MSG" ]; then
+              ERR_MSG=$(tail -n 10 bundle.log | tr '\n' ' ' | sed 's/"/\\"/g')
+            fi
+            echo "::error title=Bundle Build Failure::$ERR_MSG"
             exit 1
           }
 
@@ -74,12 +78,26 @@ jobs:
         run: |
           set -o pipefail
           flutter build apk --release -v 2>&1 | tee apk.log || {
-            echo "## :x: Release APK Build Failed" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            tail -n 150 apk.log >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "====================== FAILURE DIAGNOSTICS ======================"
+            grep -A 25 -B 5 "What went wrong:" apk.log || tail -n 80 apk.log
+            echo "================================================================"
+            ERR_MSG=$(grep -A 8 "What went wrong:" apk.log | head -n 8 | tr '\n' ' ' | sed 's/"/\\"/g')
+            if [ -z "$ERR_MSG" ]; then
+              ERR_MSG=$(tail -n 10 apk.log | tr '\n' ' ' | sed 's/"/\\"/g')
+            fi
+            echo "::error title=APK Build Failure::$ERR_MSG"
             exit 1
           }
+
+      - name: Upload Build Logs on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build-Failure-Logs
+          path: |
+            bundle.log
+            apk.log
+          if-no-files-found: ignore
 
       - name: Verify Official Release Signature
         run: |

@@ -18,24 +18,31 @@ def configure():
 
     os.makedirs("android/app", exist_ok=True)
     target_keystore = "android/app/upload-keystore.jks"
+    root_keystore = "android/upload-keystore.jks"
 
-    # Step 1: Ensure keystore exists
+    # Step 1: Ensure keystore exists in all expected paths
     if keystore_base64:
         print("[Signing] Decoding KEYSTORE_BASE64 from environment...")
         try:
             keystore_bytes = base64.b64decode(keystore_base64)
             with open(target_keystore, "wb") as f:
                 f.write(keystore_bytes)
-            print(f"[Signing] Wrote {target_keystore} from KEYSTORE_BASE64 ({len(keystore_bytes)} bytes).")
+            with open(root_keystore, "wb") as f:
+                f.write(keystore_bytes)
+            with open("upload-keystore.jks", "wb") as f:
+                f.write(keystore_bytes)
+            print(f"[Signing] Wrote keystore to {target_keystore} and {root_keystore} ({len(keystore_bytes)} bytes).")
         except Exception as e:
             print(f"[Signing] ERROR decoding KEYSTORE_BASE64: {e}")
             sys.exit(1)
     elif os.path.exists("upload-keystore.jks"):
-        print("[Signing] Copying root upload-keystore.jks to android/app/...")
+        print("[Signing] Copying root upload-keystore.jks to android/app/ and android/...")
         shutil.copy2("upload-keystore.jks", target_keystore)
-        print(f"[Signing] Copied {target_keystore} ({os.path.getsize(target_keystore)} bytes).")
+        shutil.copy2("upload-keystore.jks", root_keystore)
+        print(f"[Signing] Copied {target_keystore} and {root_keystore}.")
     elif os.path.exists(target_keystore):
-        print(f"[Signing] Using existing {target_keystore} ({os.path.getsize(target_keystore)} bytes).")
+        shutil.copy2(target_keystore, root_keystore)
+        print(f"[Signing] Copied {target_keystore} to {root_keystore}.")
     else:
         print("[Signing] ERROR: No upload-keystore.jks found! Cannot sign release.")
         sys.exit(1)
