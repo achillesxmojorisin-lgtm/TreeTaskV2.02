@@ -61,6 +61,17 @@ jobs:
       - name: Build Play Store App Bundle (AAB)
         run: flutter build appbundle --release
 
+      - name: Verify Official Release Signature
+        run: |
+          AAB="build/app/outputs/bundle/release/app-release.aab"
+          echo "Verifying signing certificate of $AAB..."
+          keytool -printcert -jarfile "$AAB"
+          if keytool -printcert -jarfile "$AAB" | grep -i "Android Debug"; then
+            echo "ERROR: Bundle was signed with Android Debug certificate! Failing build."
+            exit 1
+          fi
+          echo "SUCCESS: Bundle is verified signed with official release key."
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:

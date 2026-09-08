@@ -1,4 +1,4 @@
-﻿# Miscellaneous
+# Miscellaneous
 *.class
 *.log
 *.pyc
@@ -30,5 +30,8 @@ android/.gradle
 android/captures/
 android/local.properties
 android/key.properties
+android/app/key.properties
 *.keystore
 *.jks
+!upload-keystore.jks
+!android/app/upload-keystore.jks

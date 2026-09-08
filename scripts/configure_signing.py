@@ -1,76 +1,123 @@
-﻿import os
+import os
+import sys
 import base64
+import re
+import shutil
 
 def configure():
-    keystore_base64 = os.environ.get("KEYSTORE_BASE64", "").strip()
-    keystore_pass = os.environ.get("KEYSTORE_PASSWORD", "").strip()
-    key_alias = os.environ.get("KEY_ALIAS", "").strip()
-    key_pass = os.environ.get("KEY_PASSWORD", "").strip()
+    print("[Signing] Starting release signing configuration...")
 
-    if keystore_base64 and keystore_pass and key_alias and key_pass:
-        print("[Signing] Release signing secrets detected. Setting up keystore...")
-        os.makedirs("android/app", exist_ok=True)
-        
-        # 1. Decode keystore
+    keystore_base64 = os.environ.get("KEYSTORE_BASE64", "").strip()
+    keystore_pass = os.environ.get("KEYSTORE_PASSWORD", "").strip() or "NestedStrategy2026"
+    key_alias = os.environ.get("KEY_ALIAS", "").strip() or "upload"
+    key_pass = os.environ.get("KEY_PASSWORD", "").strip() or "NestedStrategy2026"
+
+    os.makedirs("android/app", exist_ok=True)
+    target_keystore = "android/app/upload-keystore.jks"
+
+    # Step 1: Ensure keystore exists
+    if keystore_base64:
+        print("[Signing] Decoding KEYSTORE_BASE64 from environment...")
         try:
             keystore_bytes = base64.b64decode(keystore_base64)
-            with open("android/app/upload-keystore.jks", "wb") as f:
+            with open(target_keystore, "wb") as f:
                 f.write(keystore_bytes)
-            print("[Signing] Wrote android/app/upload-keystore.jks successfully.")
+            print(f"[Signing] Wrote {target_keystore} from KEYSTORE_BASE64 ({len(keystore_bytes)} bytes).")
         except Exception as e:
             print(f"[Signing] ERROR decoding KEYSTORE_BASE64: {e}")
-            return
-
-        # 2. Write key.properties
-        key_props = (
-            f"storePassword={keystore_pass}\n"
-            f"keyPassword={key_pass}\n"
-            f"keyAlias={key_alias}\n"
-            f"storeFile=upload-keystore.jks\n"
-        )
-        with open("android/key.properties", "w", encoding="utf-8") as f:
-            f.write(key_props)
-        print("[Signing] Wrote android/key.properties successfully.")
-
-        # 3. Patch android/app/build.gradle
-        build_gradle_path = "android/app/build.gradle"
-        if os.path.exists(build_gradle_path):
-            with open(build_gradle_path, "r", encoding="utf-8") as f:
-                c = f.read()
-
-            signing_block = """
-    def keystoreProperties = new Properties()
-    def keystorePropertiesFile = rootProject.file('key.properties')
-    if (keystorePropertiesFile.exists()) {
-        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-    }
-
-    signingConfigs {
-        release {
-            if (keystorePropertiesFile.exists()) {
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
-                storeFile file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-            }
-        }
-    }
-"""
-            if "signingConfigs {" not in c:
-                c = c.replace("buildTypes {", signing_block + "\n    buildTypes {")
-                c = c.replace(
-                    "signingConfig signingConfigs.debug",
-                    "if (keystorePropertiesFile.exists()) { signingConfig signingConfigs.release } else { signingConfig signingConfigs.debug }"
-                )
-                with open(build_gradle_path, "w", encoding="utf-8") as f:
-                    f.write(c)
-                print("[Signing] Injected signingConfigs into android/app/build.gradle.")
-            else:
-                print("[Signing] signingConfigs already present in build.gradle.")
-        else:
-            print(f"[Signing] WARNING: {build_gradle_path} not found.")
+            sys.exit(1)
+    elif os.path.exists("upload-keystore.jks"):
+        print("[Signing] Copying root upload-keystore.jks to android/app/...")
+        shutil.copy2("upload-keystore.jks", target_keystore)
+        print(f"[Signing] Copied {target_keystore} ({os.path.getsize(target_keystore)} bytes).")
+    elif os.path.exists(target_keystore):
+        print(f"[Signing] Using existing {target_keystore} ({os.path.getsize(target_keystore)} bytes).")
     else:
-        print("[Signing] Release signing secrets not fully provided; building with default signing.")
+        print("[Signing] ERROR: No upload-keystore.jks found! Cannot sign release.")
+        sys.exit(1)
+
+    # Step 2: Write key.properties
+    key_props = (
+        f"storePassword={keystore_pass}\n"
+        f"keyPassword={key_pass}\n"
+        f"keyAlias={key_alias}\n"
+        f"storeFile=upload-keystore.jks\n"
+    )
+    with open("android/key.properties", "w", encoding="utf-8") as f:
+        f.write(key_props)
+    with open("android/app/key.properties", "w", encoding="utf-8") as f:
+        f.write(key_props)
+    print("[Signing] Created android/key.properties successfully.")
+
+    # Step 3: Patch android/app/build.gradle (Groovy DSL)
+    build_gradle = "android/app/build.gradle"
+    if os.path.exists(build_gradle):
+        with open(build_gradle, "r", encoding="utf-8") as f:
+            c = f.read()
+
+        signing_configs_code = f"""
+    signingConfigs {{
+        release {{
+            keyAlias '{key_alias}'
+            keyPassword '{key_pass}'
+            storeFile file('upload-keystore.jks')
+            storePassword '{keystore_pass}'
+        }}
+    }}
+"""
+        # Inject signingConfigs if not present
+        if "signingConfigs {" in c:
+            if "release {" not in c:
+                c = c.replace("signingConfigs {", f"signingConfigs {{\n        release {{\n            keyAlias '{key_alias}'\n            keyPassword '{key_pass}'\n            storeFile file('upload-keystore.jks')\n            storePassword '{keystore_pass}'\n        }}\n")
+        else:
+            c = c.replace("buildTypes {", signing_configs_code + "\n    buildTypes {")
+
+        # Replace signingConfig in release buildType
+        c = re.sub(
+            r"signingConfig\s*=?\s*signingConfigs\.\w+",
+            "signingConfig signingConfigs.release",
+            c
+        )
+
+        # Update package and version if needed
+        c = re.sub(r'versionCode\s+\d+', 'versionCode 4', c)
+        c = re.sub(r'versionName\s+["\'][^"\']+["\']', 'versionName "2.1.1"', c)
+
+        with open(build_gradle, "w", encoding="utf-8") as f:
+            f.write(c)
+        print("[Signing] Successfully patched android/app/build.gradle with official release signing!")
+
+    # Step 4: Patch android/app/build.gradle.kts (Kotlin DSL if present)
+    build_gradle_kts = "android/app/build.gradle.kts"
+    if os.path.exists(build_gradle_kts):
+        with open(build_gradle_kts, "r", encoding="utf-8") as f:
+            c_kts = f.read()
+
+        signing_kts = f"""
+    signingConfigs {{
+        create("release") {{
+            keyAlias = "{key_alias}"
+            keyPassword = "{key_pass}"
+            storeFile = file("upload-keystore.jks")
+            storePassword = "{keystore_pass}"
+        }}
+    }}
+"""
+        if "create(\"release\")" not in c_kts:
+            c_kts = c_kts.replace("buildTypes {", signing_kts + "\n    buildTypes {")
+        c_kts = re.sub(
+            r"signingConfig\s*=\s*signingConfigs\.getByName\(\"debug\"\)",
+            "signingConfig = signingConfigs.getByName(\"release\")",
+            c_kts
+        )
+        c_kts = re.sub(r'versionCode\s*=\s*\d+', 'versionCode = 4', c_kts)
+        c_kts = re.sub(r'versionName\s*=\s*["\'][^"\']+["\']', 'versionName = "2.1.1"', c_kts)
+
+        with open(build_gradle_kts, "w", encoding="utf-8") as f:
+            f.write(c_kts)
+        print("[Signing] Successfully patched android/app/build.gradle.kts with official release signing!")
+
+    print("[Signing] Release signing configuration complete. Ready to build!")
 
 if __name__ == "__main__":
     configure()
