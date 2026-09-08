@@ -79,15 +79,24 @@ def configure():
             c
         )
 
-        # Enforce exact package name and version
+        # Enforce exact package name, API 36, and version
         c = re.sub(r'applicationId\s+["\'][^"\']+["\']', 'applicationId "com.studioxanywhere.nested"', c)
         c = re.sub(r'namespace\s+["\'][^"\']+["\']', 'namespace "com.studioxanywhere.nested"', c)
-        c = re.sub(r'versionCode\s+\d+', 'versionCode 5', c)
-        c = re.sub(r'versionName\s+["\'][^"\']+["\']', 'versionName "2.1.2"', c)
+        c = re.sub(r'compileSdkVersion\s+\d+', 'compileSdkVersion 36', c)
+        c = re.sub(r'targetSdkVersion\s+\d+', 'targetSdkVersion 36', c)
+        c = re.sub(r'versionCode\s+\d+', 'versionCode 6', c)
+        c = re.sub(r'versionName\s+["\'][^"\']+["\']', 'versionName "2.1.3"', c)
+
+        # Inject ndk debug symbols into release buildType if not already present
+        if "debugSymbolLevel" not in c:
+            c = c.replace(
+                "signingConfig signingConfigs.release",
+                "signingConfig signingConfigs.release\n            ndk {\n                debugSymbolLevel 'FULL'\n            }"
+            )
 
         with open(build_gradle, "w", encoding="utf-8") as f:
             f.write(c)
-        print("[Signing] Successfully patched android/app/build.gradle with official release signing and com.studioxanywhere.nested package!")
+        print("[Signing] Successfully patched android/app/build.gradle with API 36, symbols, release signing and com.studioxanywhere.nested package!")
 
     # Step 4: Patch android/app/build.gradle.kts (Kotlin DSL if present)
     build_gradle_kts = "android/app/build.gradle.kts"
@@ -112,14 +121,22 @@ def configure():
             "signingConfig = signingConfigs.getByName(\"release\")",
             c_kts
         )
+        c_kts = re.sub(r'compileSdk\s*=\s*\d+', 'compileSdk = 36', c_kts)
+        c_kts = re.sub(r'targetSdk\s*=\s*\d+', 'targetSdk = 36', c_kts)
         c_kts = re.sub(r'applicationId\s*=\s*["\'][^"\']+["\']', 'applicationId = "com.studioxanywhere.nested"', c_kts)
         c_kts = re.sub(r'namespace\s*=\s*["\'][^"\']+["\']', 'namespace = "com.studioxanywhere.nested"', c_kts)
-        c_kts = re.sub(r'versionCode\s*=\s*\d+', 'versionCode = 5', c_kts)
-        c_kts = re.sub(r'versionName\s*=\s*["\'][^"\']+["\']', 'versionName = "2.1.2"', c_kts)
+        c_kts = re.sub(r'versionCode\s*=\s*\d+', 'versionCode = 6', c_kts)
+        c_kts = re.sub(r'versionName\s*=\s*["\'][^"\']+["\']', 'versionName = "2.1.3"', c_kts)
+
+        if "debugSymbolLevel" not in c_kts:
+            c_kts = c_kts.replace(
+                "signingConfig = signingConfigs.getByName(\"release\")",
+                "signingConfig = signingConfigs.getByName(\"release\")\n            ndk {\n                debugSymbolLevel = \"FULL\"\n            }"
+            )
 
         with open(build_gradle_kts, "w", encoding="utf-8") as f:
             f.write(c_kts)
-        print("[Signing] Successfully patched android/app/build.gradle.kts with official release signing!")
+        print("[Signing] Successfully patched android/app/build.gradle.kts with API 36, symbols, and official release signing!")
 
     # Step 5: Ensure AndroidManifest.xml package matches
     manifest_path = "android/app/src/main/AndroidManifest.xml"
