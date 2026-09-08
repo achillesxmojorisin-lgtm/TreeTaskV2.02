@@ -1,5 +1,5 @@
-name: treetask_v2
-description: "TreeTask V2 - Infinite nested tasks with weighted progress (scale 1-10)"
+name: nested_task_strategy
+description: "Nested: Task Strategy - Infinite nested tasks with weighted progress (scale 1-10)"
 publish_to: 'none'
 version: 2.0.2+1
 

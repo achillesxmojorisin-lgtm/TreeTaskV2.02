@@ -1,4 +1,4 @@
-name: Build TreeTask V2 APK
+name: Build Nested: Task Strategy (APK & AAB)
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Build Flutter APK
+    name: Build Android Release Artifacts
     runs-on: ubuntu-latest
 
     steps:
@@ -32,7 +32,7 @@ jobs:
       - name: Setup Android Scaffolding
         run: |
           rm -rf android
-          flutter create . --platforms=android --org=com.ghsoft --project-name=treetask_v2
+          flutter create . --platforms=android --org=com.studioxanywhere --project-name=nested_task_strategy
 
       - name: Get Dependencies
         run: flutter pub get
@@ -40,9 +40,19 @@ jobs:
       - name: Build Release APK
         run: flutter build apk --release
 
+      - name: Build Play Store App Bundle (AAB)
+        run: flutter build appbundle --release
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TreeTask-V2-Release-APK
+          name: Nested-Release-APK
           path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+
+      - name: Upload Play Store AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nested-PlayStore-AAB
+          path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error

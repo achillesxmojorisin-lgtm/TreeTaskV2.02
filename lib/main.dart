@@ -9,20 +9,20 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (_) => TaskProvider(),
-      child: const TreeTaskApp(),
+      child: const NestedApp(),
     ),
   );
 }
 
-class TreeTaskApp extends StatelessWidget {
-  const TreeTaskApp({super.key});
+class NestedApp extends StatelessWidget {
+  const NestedApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TaskProvider>();
 
     return MaterialApp(
-      title: 'TreeTask V2',
+      title: 'Nested: Task Strategy',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

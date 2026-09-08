@@ -29,7 +29,20 @@ class HomeScreen extends StatelessWidget {
               child: const Icon(Icons.account_tree_outlined, color: AppTheme.primary, size: 22),
             ),
             const SizedBox(width: 10),
-            const Text('TreeTask V2'),
+            const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Nested',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                ),
+                Text(
+                  'TASK STRATEGY',
+                  style: TextStyle(fontSize: 9, color: Colors.grey, letterSpacing: 0.8, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
           ],
         ),
         actions: [
