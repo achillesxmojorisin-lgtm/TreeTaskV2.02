@@ -49,7 +49,15 @@ def configure():
         f.write(key_props)
     print("[Signing] Created android/key.properties successfully.")
 
-    # Step 3: Patch android/app/build.gradle (Groovy DSL)
+    # Step 3: Ensure MainActivity.kt exists
+    kt_path = "android/app/src/main/kotlin/com/studioxanywhere/nested/MainActivity.kt"
+    if not os.path.exists(kt_path):
+        os.makedirs(os.path.dirname(kt_path), exist_ok=True)
+        with open(kt_path, "w", encoding="utf-8") as f:
+            f.write("package com.studioxanywhere.nested\n\nimport io.flutter.embedding.android.FlutterActivity\n\nclass MainActivity: FlutterActivity() {\n}\n")
+        print("[Signing] Ensured MainActivity.kt exists.")
+
+    # Step 4: Patch android/app/build.gradle (Groovy DSL)
     build_gradle = "android/app/build.gradle"
     if os.path.exists(build_gradle):
         with open(build_gradle, "r", encoding="utf-8") as f:
@@ -82,10 +90,14 @@ def configure():
         # Enforce exact package name, API 36, and version
         c = re.sub(r'applicationId\s+["\'][^"\']+["\']', 'applicationId "com.studioxanywhere.nested"', c)
         c = re.sub(r'namespace\s+["\'][^"\']+["\']', 'namespace "com.studioxanywhere.nested"', c)
-        c = re.sub(r'compileSdkVersion\s+\d+', 'compileSdkVersion 36', c)
-        c = re.sub(r'targetSdkVersion\s+\d+', 'targetSdkVersion 36', c)
-        c = re.sub(r'versionCode\s+\d+', 'versionCode 6', c)
-        c = re.sub(r'versionName\s+["\'][^"\']+["\']', 'versionName "2.1.3"', c)
+        
+        # Match any compileSdkVersion / compileSdk format (with or without = or flutter. prefix)
+        c = re.sub(r'compileSdkVersion\s+.*', 'compileSdkVersion 36', c)
+        c = re.sub(r'compileSdk\s*=.*', 'compileSdk = 36', c)
+        c = re.sub(r'targetSdkVersion\s+.*', 'targetSdkVersion 36', c)
+        c = re.sub(r'targetSdk\s*=.*', 'targetSdk = 36', c)
+        c = re.sub(r'versionCode\s+.*', 'versionCode 7', c)
+        c = re.sub(r'versionName\s+.*', 'versionName "2.1.4"', c)
 
         # Inject ndk debug symbols into release buildType if not already present
         if "debugSymbolLevel" not in c:
@@ -98,7 +110,7 @@ def configure():
             f.write(c)
         print("[Signing] Successfully patched android/app/build.gradle with API 36, symbols, release signing and com.studioxanywhere.nested package!")
 
-    # Step 4: Patch android/app/build.gradle.kts (Kotlin DSL if present)
+    # Step 5: Patch android/app/build.gradle.kts (Kotlin DSL if present)
     build_gradle_kts = "android/app/build.gradle.kts"
     if os.path.exists(build_gradle_kts):
         with open(build_gradle_kts, "r", encoding="utf-8") as f:
@@ -121,12 +133,12 @@ def configure():
             "signingConfig = signingConfigs.getByName(\"release\")",
             c_kts
         )
-        c_kts = re.sub(r'compileSdk\s*=\s*\d+', 'compileSdk = 36', c_kts)
-        c_kts = re.sub(r'targetSdk\s*=\s*\d+', 'targetSdk = 36', c_kts)
+        c_kts = re.sub(r'compileSdk\s*=.*', 'compileSdk = 36', c_kts)
+        c_kts = re.sub(r'targetSdk\s*=.*', 'targetSdk = 36', c_kts)
         c_kts = re.sub(r'applicationId\s*=\s*["\'][^"\']+["\']', 'applicationId = "com.studioxanywhere.nested"', c_kts)
         c_kts = re.sub(r'namespace\s*=\s*["\'][^"\']+["\']', 'namespace = "com.studioxanywhere.nested"', c_kts)
-        c_kts = re.sub(r'versionCode\s*=\s*\d+', 'versionCode = 6', c_kts)
-        c_kts = re.sub(r'versionName\s*=\s*["\'][^"\']+["\']', 'versionName = "2.1.3"', c_kts)
+        c_kts = re.sub(r'versionCode\s*=.*', 'versionCode = 7', c_kts)
+        c_kts = re.sub(r'versionName\s*=.*', 'versionName = "2.1.4"', c_kts)
 
         if "debugSymbolLevel" not in c_kts:
             c_kts = c_kts.replace(
@@ -138,7 +150,7 @@ def configure():
             f.write(c_kts)
         print("[Signing] Successfully patched android/app/build.gradle.kts with API 36, symbols, and official release signing!")
 
-    # Step 5: Ensure AndroidManifest.xml package matches
+    # Step 6: Ensure AndroidManifest.xml package matches
     manifest_path = "android/app/src/main/AndroidManifest.xml"
     if os.path.exists(manifest_path):
         with open(manifest_path, "r", encoding="utf-8") as f:

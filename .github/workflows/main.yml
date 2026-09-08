@@ -41,10 +41,10 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup Android SDK Platform 36
+      - name: Setup Android SDK Platform 36 & NDK
         run: |
           yes | sdkmanager --licenses || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0" || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;25.1.8937393" "cmake;3.22.1" || true
 
       - name: Setup Android Scaffolding & Release Signing
         env:
@@ -53,7 +53,6 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          rm -rf android
           flutter create . --platforms=android --org=com.studioxanywhere --project-name=nested
           python3 scripts/configure_signing.py
 
@@ -77,6 +76,10 @@ jobs:
           fi
           echo "SUCCESS: Bundle is verified signed with official release key."
 
+      - name: Verify Target API 36 and Debug Symbols in AAB
+        run: |
+          python3 scripts/verify_release_aab.py
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -90,6 +93,13 @@ jobs:
           name: Nested-PlayStore-AAB
           path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
+
+      - name: Upload Debug Symbols Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nested-Debug-Symbols
+          path: build/app/outputs/bundle/release/native-debug-symbols.zip
+          if-no-files-found: warn
 
       - name: Publish New Version or Update Existing Release
         if: github.event_name != 'pull_request'
@@ -114,15 +124,16 @@ jobs:
 
           APK="build/app/outputs/flutter-apk/app-release.apk"
           AAB="build/app/outputs/bundle/release/app-release.aab"
+          SYMBOLS="build/app/outputs/bundle/release/native-debug-symbols.zip"
 
           # 2. Check if release already exists on GitHub
           if gh release view "$TARGET_TAG" >/dev/null 2>&1; then
             echo "Release $TARGET_TAG exists. Updating binaries in-place (same release)..."
-            gh release upload "$TARGET_TAG" "$APK" "$AAB" --clobber
+            gh release upload "$TARGET_TAG" "$APK" "$AAB" "$SYMBOLS" --clobber
             echo "Successfully updated $TARGET_TAG release assets."
           else
             echo "Release $TARGET_TAG does not exist. Creating new release entry..."
-            gh release create "$TARGET_TAG" "$APK" "$AAB" \
+            gh release create "$TARGET_TAG" "$APK" "$AAB" "$SYMBOLS" \
               --title "Nested: Task Strategy $TARGET_TAG" \
               --generate-notes
             echo "Successfully published new release $TARGET_TAG."
