@@ -52,6 +52,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
+          rm -rf android
           flutter create . --platforms=android --org=com.studioxanywhere --project-name=nested
           python3 scripts/configure_signing.py
 
@@ -59,10 +60,26 @@ jobs:
         run: flutter pub get
 
       - name: Build Play Store App Bundle (AAB)
-        run: flutter build appbundle --release -v
+        run: |
+          set -o pipefail
+          flutter build appbundle --release -v 2>&1 | tee bundle.log || {
+            echo "## :x: Play Store AAB Build Failed" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 150 bundle.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          }
 
       - name: Build Release APK
-        run: flutter build apk --release -v
+        run: |
+          set -o pipefail
+          flutter build apk --release -v 2>&1 | tee apk.log || {
+            echo "## :x: Release APK Build Failed" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 150 apk.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          }
 
       - name: Verify Official Release Signature
         run: |
