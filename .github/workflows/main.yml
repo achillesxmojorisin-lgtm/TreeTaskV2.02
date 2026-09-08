@@ -3,9 +3,14 @@ name: "Build Nested: Task Strategy (APK and AAB)"
 on:
   push:
     branches: [ main, master ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -56,3 +61,13 @@ jobs:
           name: Nested-PlayStore-AAB
           path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
+
+      - name: Publish Official GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Nested: Task Strategy ${{ github.ref_name }}"
+          generate_release_notes: true
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab

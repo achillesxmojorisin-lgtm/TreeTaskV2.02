@@ -225,7 +225,7 @@ class StrategyInsightsDialog extends StatelessWidget {
                               builder: (ctx) => AlertDialog(
                                 title: const Text('Feedback & Feature Requests'),
                                 content: const SelectableText(
-                                  'Share feature ideas or feedback directly with the founders at:\n\nhttps://github.com/studioxanywhere-hub/TreeTaskV2.02/issues',
+                                  'Share feature ideas or feedback directly with the founders at:\n\nhttps://github.com/studioxanywhere-hub/Nested-TaskStrategy/issues',
                                 ),
                                 actions: [
                                   TextButton(

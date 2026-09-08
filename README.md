@@ -2,15 +2,15 @@
 
 A modern, high-performance hierarchical task management app featuring **infinite nested subtasks** and **weighted completion tracking (scale 1–10)**.
 
-* **Live Web App**: [https://studioxanywhere-hub.github.io/TreeTaskV2.02/](https://studioxanywhere-hub.github.io/TreeTaskV2.02/)
-* **Privacy Policy**: [https://studioxanywhere-hub.github.io/TreeTaskV2.02/privacy.html](https://studioxanywhere-hub.github.io/TreeTaskV2.02/privacy.html)
+* **Live Web App**: [https://studioxanywhere-hub.github.io/Nested-TaskStrategy/](https://studioxanywhere-hub.github.io/Nested-TaskStrategy/)
+* **Privacy Policy**: [https://studioxanywhere-hub.github.io/Nested-TaskStrategy/privacy.html](https://studioxanywhere-hub.github.io/Nested-TaskStrategy/privacy.html)
 
 ---
 
 ## 🌐 Instant Web & Browser App (Zero Setup)
 
 You can run and test the app right in your browser (desktop, tablet, or mobile):
-* Open [https://studioxanywhere-hub.github.io/TreeTaskV2.02/](https://studioxanywhere-hub.github.io/TreeTaskV2.02/)
+* Open [https://studioxanywhere-hub.github.io/Nested-TaskStrategy/](https://studioxanywhere-hub.github.io/Nested-TaskStrategy/)
 * Works 100% offline with instant local persistence.
 
 ---
@@ -27,7 +27,7 @@ You do **not** need to install Flutter or Android Studio on your computer! GitHu
 
 ---
 
-## ?? How the Weighted Mathematics Work
+## 🧮 How the Weighted Mathematics Work
 
 * **Leaf Tasks** (Tasks without children):
   * `0%` when active, `100%` when completed.
@@ -35,6 +35,6 @@ You do **not** need to install Flutter or Android Studio on your computer! GitHu
   $$\text{Parent Progress} = \frac{\sum_{i=1}^{n} (\text{Weight}_i \times \text{Progress}_i)}{\sum_{i=1}^{n} \text{Weight}_i}$$
 * **Infinite Depth**: Every nested level calculates its weighted percentage and propagates up the branch to the top-level project.
 * **Effort Tiers**:
-  * ?? **1?3 (Minor)**: Quick wins, small chores.
-  * ?? **4?7 (Moderate)**: Standard feature tasks, regular effort.
-  * ?? **8?10 (Critical / Heavy)**: High-impact milestones, complex architectures.
+  * 🟢 **1–3 (Minor)**: Quick wins, small chores.
+  * 🟡 **4–7 (Moderate)**: Standard feature tasks, regular effort.
+  * 🔴 **8–10 (Critical / Heavy)**: High-impact milestones, complex architectures.

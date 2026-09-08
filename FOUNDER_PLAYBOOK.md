@@ -1,12 +1,12 @@
-# TreeTask V2 — Founder's Migration & Operational Dossier 🚀
+# Nested: Task Strategy — Founder's Migration & Operational Dossier 🚀
 
-This document preserves the complete technical architecture, mathematical specifications, CI/CD pipeline, and step-by-step migration procedures for transferring TreeTask V2 from the testing phase to your permanent production stack.
+This document preserves the complete technical architecture, mathematical specifications, CI/CD pipeline, and step-by-step migration procedures for transferring Nested: Task Strategy from the testing phase to your permanent production stack.
 
 ---
 
 ## 1. Executive Summary & Core Mechanics
 
-* **Application**: TreeTask V2 (Android & Multiplatform)
+* **Application**: Nested: Task Strategy (Android & Multiplatform)
 * **Framework**: Flutter 3.24+ (Dart)
 * **Architecture**: Reactive hierarchical tree state management with offline-first local storage
 * **Key Differentiator**: **Infinite nesting with weighted contribution (Scale 1–10)**
@@ -95,7 +95,7 @@ jobs:
       - name: Setup Android Scaffolding
         run: |
           rm -rf android
-          flutter create . --platforms=android --org=com.treetask --project-name=treetask_v2
+          flutter create . --platforms=android --org=com.studioxanywhere --project-name=nested
 
       - name: Install Dependencies
         run: flutter pub get
@@ -109,13 +109,13 @@ jobs:
       - name: Upload APK (For direct phone testing)
         uses: actions/upload-artifact@v4
         with:
-          name: TreeTask-V2-APK
+          name: Nested-Release-APK
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload AAB (For Google Play Store submission)
         uses: actions/upload-artifact@v4
         with:
-          name: TreeTask-V2-PlayStore-AAB
+          name: Nested-PlayStore-AAB
           path: build/app/outputs/bundle/release/app-release.aab
 ```
 
