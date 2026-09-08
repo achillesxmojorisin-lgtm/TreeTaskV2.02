@@ -6,6 +6,7 @@ import '../widgets/tree_task_item.dart';
 import '../widgets/focus_breadcrumb.dart';
 import '../widgets/edit_task_dialog.dart';
 import '../widgets/strategy_insights_dialog.dart';
+import 'local_insights_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -58,11 +59,11 @@ class HomeScreen extends StatelessWidget {
             onPressed: () => provider.setAllExpanded(false),
           ),
           IconButton(
-            tooltip: 'Strategy Insights & Feedback',
+            tooltip: 'Local Insights (See Your Own Data)',
             icon: const Icon(Icons.insights_rounded, size: 20),
-            onPressed: () => showDialog(
-              context: context,
-              builder: (_) => const StrategyInsightsDialog(),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LocalInsightsScreen()),
             ),
           ),
           IconButton(

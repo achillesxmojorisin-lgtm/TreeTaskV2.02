@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/task_item.dart';
 import '../providers/task_provider.dart';
 import '../theme/app_theme.dart';
+import '../screens/local_insights_screen.dart';
 
 class StrategyInsightsDialog extends StatelessWidget {
   const StrategyInsightsDialog({super.key});
@@ -50,6 +51,17 @@ class StrategyInsightsDialog extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+                IconButton(
+                  tooltip: 'Open Full Screen',
+                  icon: const Icon(Icons.fullscreen_rounded, size: 22),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LocalInsightsScreen()),
+                    );
+                  },
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 20),

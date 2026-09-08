@@ -191,6 +191,9 @@ class TaskStrategyMetrics {
   final int minorCount; // 1-3
   final int moderateCount; // 4-7
   final int criticalCount; // 8-10
+  final int totalMilestones;
+  final int completedMilestones;
+  final double overallWeightedScore;
 
   const TaskStrategyMetrics({
     required this.totalTasks,
@@ -200,19 +203,49 @@ class TaskStrategyMetrics {
     required this.minorCount,
     required this.moderateCount,
     required this.criticalCount,
+    required this.totalMilestones,
+    required this.completedMilestones,
+    required this.overallWeightedScore,
   });
 
   double get minorPercent => totalTasks == 0 ? 0.0 : (minorCount / totalTasks) * 100;
   double get moderatePercent => totalTasks == 0 ? 0.0 : (moderateCount / totalTasks) * 100;
   double get criticalPercent => totalTasks == 0 ? 0.0 : (criticalCount / totalTasks) * 100;
   double get completionRate => totalTasks == 0 ? 0.0 : (completedTasks / totalTasks) * 100;
+  double get milestoneCompletionRate => totalMilestones == 0 ? 0.0 : (completedMilestones / totalMilestones) * 100;
+
+  String get strategyArchetype {
+    if (totalTasks == 0) return 'Strategic Novice';
+    if (maxDepth >= 4) return 'Deep Architect';
+    if (criticalPercent >= 40) return 'High-Impact Focus';
+    if (minorPercent >= 50) return 'Agile Sprinter';
+    return 'Balanced Strategist';
+  }
+
+  String get archetypeDescription {
+    switch (strategyArchetype) {
+      case 'Deep Architect':
+        return 'You organize vision into deep, structured hierarchical branches.';
+      case 'High-Impact Focus':
+        return 'You dedicate maximum energy to high-weight, high-leverage milestones.';
+      case 'Agile Sprinter':
+        return 'You excel at breaking challenges down into fast, bite-sized tasks.';
+      case 'Balanced Strategist':
+        return 'You maintain a balanced harmony between major goals and quick wins.';
+      default:
+        return 'Start adding and nesting tasks to unlock your strategy insights.';
+    }
+  }
 
   String toDiagnosticString() {
-    return 'Nested v2.1.0 Diagnostics [Zero PII]\n'
-        '• Max Depth: Level $maxDepth\n'
+    return 'Nested: Task Strategy Local Insights [Zero PII]\n'
+        '• Archetype: $strategyArchetype\n'
+        '• Average Task Weight: ${averageWeight.toStringAsFixed(1)} / 10\n'
+        '• Deepest Nested Level: Level $maxDepth\n'
+        '• Milestones Completed: $completedMilestones / $totalMilestones (${milestoneCompletionRate.toStringAsFixed(0)}%)\n'
         '• Total Tasks: $totalTasks ($completedTasks completed, ${completionRate.toStringAsFixed(1)}%)\n'
-        '• Average Effort Weight: ${averageWeight.toStringAsFixed(1)} / 10\n'
-        '• Tiers: Minor ${minorPercent.toStringAsFixed(0)}% | Moderate ${moderatePercent.toStringAsFixed(0)}% | Critical ${criticalPercent.toStringAsFixed(0)}%';
+        '• Effort Tiers: Minor ${minorPercent.toStringAsFixed(0)}% | Moderate ${moderatePercent.toStringAsFixed(0)}% | Critical ${criticalPercent.toStringAsFixed(0)}%\n'
+        '• 100% computed on-device with zero tracking or telemetry.';
   }
 
   factory TaskStrategyMetrics.compute(List<TaskItem> roots) {
@@ -225,6 +258,9 @@ class TaskStrategyMetrics {
         minorCount: 0,
         moderateCount: 0,
         criticalCount: 0,
+        totalMilestones: 0,
+        completedMilestones: 0,
+        overallWeightedScore: 0.0,
       );
     }
 
@@ -244,12 +280,18 @@ class TaskStrategyMetrics {
     int minor = 0;
     int moderate = 0;
     int critical = 0;
+    int milestones = 0;
+    int milestonesDone = 0;
+    double weightedProgressSum = 0.0;
 
     for (final t in allTasks) {
-      if (t.isDone || (t.children.isNotEmpty && t.progress >= 0.999)) {
+      final isDone = t.isDone || (t.children.isNotEmpty && t.progress >= 0.999);
+      if (isDone) {
         completed++;
       }
       totalWeight += t.weight;
+      weightedProgressSum += (t.weight * t.progress);
+
       if (t.weight <= 3) {
         minor++;
       } else if (t.weight <= 7) {
@@ -257,9 +299,18 @@ class TaskStrategyMetrics {
       } else {
         critical++;
       }
+
+      // Milestones: high-weight items (8-10) or parent projects
+      if (t.weight >= 8 || t.children.isNotEmpty) {
+        milestones++;
+        if (isDone) {
+          milestonesDone++;
+        }
+      }
     }
 
     final avgWeight = allTasks.isEmpty ? 0.0 : totalWeight / allTasks.length;
+    final overallWeightedScore = totalWeight == 0 ? 0.0 : (weightedProgressSum / totalWeight) * 100;
 
     return TaskStrategyMetrics(
       totalTasks: allTasks.length,
@@ -269,6 +320,9 @@ class TaskStrategyMetrics {
       minorCount: minor,
       moderateCount: moderate,
       criticalCount: critical,
+      totalMilestones: milestones,
+      completedMilestones: milestonesDone,
+      overallWeightedScore: overallWeightedScore,
     );
   }
 }
