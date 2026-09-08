@@ -37,7 +37,6 @@ jobs:
       - name: Set up Flutter SDK
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.x'
           channel: 'stable'
           cache: true
 
@@ -53,18 +52,17 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          rm -rf android
           flutter create . --platforms=android --org=com.studioxanywhere --project-name=nested
           python3 scripts/configure_signing.py
 
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Release APK
-        run: flutter build apk --release
-
       - name: Build Play Store App Bundle (AAB)
-        run: flutter build appbundle --release
+        run: flutter build appbundle --release -v
+
+      - name: Build Release APK
+        run: flutter build apk --release -v
 
       - name: Verify Official Release Signature
         run: |

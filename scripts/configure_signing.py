@@ -4,8 +4,12 @@ import base64
 import re
 import shutil
 
+VERSION_CODE = 10
+VERSION_NAME = "2.1.7"
+PACKAGE_NAME = "com.studioxanywhere.nested"
+
 def configure():
-    print("[Signing] Starting release signing configuration...")
+    print(f"[Signing] Starting release signing configuration for {PACKAGE_NAME} v{VERSION_NAME}+{VERSION_CODE}...")
 
     keystore_base64 = os.environ.get("KEYSTORE_BASE64", "").strip()
     keystore_pass = os.environ.get("KEYSTORE_PASSWORD", "").strip() or "NestedStrategy2026"
@@ -57,7 +61,29 @@ def configure():
             f.write("package com.studioxanywhere.nested\n\nimport io.flutter.embedding.android.FlutterActivity\n\nclass MainActivity: FlutterActivity() {\n}\n")
         print("[Signing] Ensured MainActivity.kt exists.")
 
-    # Step 4: Patch android/app/build.gradle (Groovy DSL)
+    # Step 4: Patch root android/build.gradle to enforce API 36 across all subprojects
+    root_gradle = "android/build.gradle"
+    if os.path.exists(root_gradle):
+        with open(root_gradle, "r", encoding="utf-8") as f:
+            rg = f.read()
+        if "compileSdkVersion 36" not in rg:
+            subprojects_rule = """
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                compileSdkVersion 36
+            }
+        }
+    }
+}
+"""
+            rg += subprojects_rule
+            with open(root_gradle, "w", encoding="utf-8") as f:
+                f.write(rg)
+            print("[Signing] Added compileSdkVersion 36 enforcement for all subprojects in android/build.gradle.")
+
+    # Step 5: Patch android/app/build.gradle (Groovy DSL)
     build_gradle = "android/app/build.gradle"
     if os.path.exists(build_gradle):
         with open(build_gradle, "r", encoding="utf-8") as f:
@@ -88,22 +114,22 @@ def configure():
         )
 
         # Enforce exact package name, API 36, and version
-        c = re.sub(r'applicationId\s+["\'][^"\']+["\']', 'applicationId "com.studioxanywhere.nested"', c)
-        c = re.sub(r'namespace\s+["\'][^"\']+["\']', 'namespace "com.studioxanywhere.nested"', c)
+        c = re.sub(r'applicationId\s+["\'][^"\']+["\']', f'applicationId "{PACKAGE_NAME}"', c)
+        c = re.sub(r'namespace\s+["\'][^"\']+["\']', f'namespace "{PACKAGE_NAME}"', c)
         
-        # Match any compileSdkVersion / compileSdk format (with or without = or flutter. prefix)
+        # Match any compileSdkVersion / compileSdk format
         c = re.sub(r'compileSdkVersion\s+.*', 'compileSdkVersion 36', c)
         c = re.sub(r'compileSdk\s*=.*', 'compileSdk = 36', c)
         c = re.sub(r'targetSdkVersion\s+.*', 'targetSdkVersion 36', c)
         c = re.sub(r'targetSdk\s*=.*', 'targetSdk = 36', c)
-        c = re.sub(r'versionCode\s+.*', 'versionCode 9', c)
-        c = re.sub(r'versionName\s+.*', 'versionName "2.1.6"', c)
+        c = re.sub(r'versionCode\s+.*', f'versionCode {VERSION_CODE}', c)
+        c = re.sub(r'versionName\s+.*', f'versionName "{VERSION_NAME}"', c)
 
         with open(build_gradle, "w", encoding="utf-8") as f:
             f.write(c)
-        print("[Signing] Successfully patched android/app/build.gradle with API 36, release signing and com.studioxanywhere.nested package!")
+        print(f"[Signing] Successfully patched android/app/build.gradle with API 36, {PACKAGE_NAME}, v{VERSION_NAME}+{VERSION_CODE}!")
 
-    # Step 5: Patch android/app/build.gradle.kts (Kotlin DSL if present)
+    # Step 6: Patch android/app/build.gradle.kts (Kotlin DSL if present)
     build_gradle_kts = "android/app/build.gradle.kts"
     if os.path.exists(build_gradle_kts):
         with open(build_gradle_kts, "r", encoding="utf-8") as f:
@@ -122,32 +148,32 @@ def configure():
         if "create(\"release\")" not in c_kts:
             c_kts = c_kts.replace("buildTypes {", signing_kts + "\n    buildTypes {")
         c_kts = re.sub(
-            r"signingConfig\s*=\s*signingConfigs\.getByName\(\"debug\"\)",
+            r"signingConfig\s*=\s*signingConfigs.*",
             "signingConfig = signingConfigs.getByName(\"release\")",
             c_kts
         )
-        c_kts = re.sub(r'compileSdk\s*=.*', 'compileSdk = 36', c_kts)
-        c_kts = re.sub(r'targetSdk\s*=.*', 'targetSdk = 36', c_kts)
-        c_kts = re.sub(r'applicationId\s*=\s*["\'][^"\']+["\']', 'applicationId = "com.studioxanywhere.nested"', c_kts)
-        c_kts = re.sub(r'namespace\s*=\s*["\'][^"\']+["\']', 'namespace = "com.studioxanywhere.nested"', c_kts)
-        c_kts = re.sub(r'versionCode\s*=.*', 'versionCode = 9', c_kts)
-        c_kts = re.sub(r'versionName\s*=.*', 'versionName = "2.1.6"', c_kts)
+        c_kts = re.sub(r'compileSdk(Version)?\s*=.*', 'compileSdk = 36', c_kts)
+        c_kts = re.sub(r'targetSdk(Version)?\s*=.*', 'targetSdk = 36', c_kts)
+        c_kts = re.sub(r'applicationId\s*=\s*["\'][^"\']+["\']', f'applicationId = "{PACKAGE_NAME}"', c_kts)
+        c_kts = re.sub(r'namespace\s*=\s*["\'][^"\']+["\']', f'namespace = "{PACKAGE_NAME}"', c_kts)
+        c_kts = re.sub(r'versionCode\s*=.*', f'versionCode = {VERSION_CODE}', c_kts)
+        c_kts = re.sub(r'versionName\s*=.*', f'versionName = "{VERSION_NAME}"', c_kts)
 
         with open(build_gradle_kts, "w", encoding="utf-8") as f:
             f.write(c_kts)
-        print("[Signing] Successfully patched android/app/build.gradle.kts with API 36 and official release signing!")
+        print(f"[Signing] Successfully patched android/app/build.gradle.kts with API 36, {PACKAGE_NAME}, v{VERSION_NAME}+{VERSION_CODE}!")
 
-    # Step 6: Ensure AndroidManifest.xml package matches
+    # Step 7: Ensure AndroidManifest.xml package matches
     manifest_path = "android/app/src/main/AndroidManifest.xml"
     if os.path.exists(manifest_path):
         with open(manifest_path, "r", encoding="utf-8") as f:
             m = f.read()
-        m = re.sub(r'package\s*=\s*["\'][^"\']+["\']', 'package="com.studioxanywhere.nested"', m)
+        m = re.sub(r'package\s*=\s*["\'][^"\']+["\']', f'package="{PACKAGE_NAME}"', m)
         with open(manifest_path, "w", encoding="utf-8") as f:
             f.write(m)
-        print("[Signing] Ensured package='com.studioxanywhere.nested' in AndroidManifest.xml.")
+        print(f"[Signing] Ensured package='{PACKAGE_NAME}' in AndroidManifest.xml.")
 
-    print("[Signing] Release signing configuration complete. Ready to build!")
+    print(f"[Signing] Release signing configuration complete for {PACKAGE_NAME} v{VERSION_NAME}+{VERSION_CODE}. Ready to build!")
 
 if __name__ == "__main__":
     configure()
