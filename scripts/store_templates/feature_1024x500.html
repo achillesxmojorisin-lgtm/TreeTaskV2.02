@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1024px;
+    height: 500px;
+    background: #080c18;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  .glow-left {
+    position: absolute;
+    top: -80px;
+    left: -80px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(79, 70, 229, 0.22) 0%, rgba(8, 12, 24, 0) 70%);
+    pointer-events: none;
+  }
+  .glow-right {
+    position: absolute;
+    bottom: -100px;
+    right: 50px;
+    width: 550px;
+    height: 550px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.08) 40%, rgba(8, 12, 24, 0) 70%);
+    pointer-events: none;
+  }
+  .container {
+    width: 1024px;
+    height: 500px;
+    display: flex;
+    padding: 40px 48px;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 2;
+  }
+  .left-col {
+    flex: 1;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(99, 102, 241, 0.14);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #a5b4fc;
+    text-transform: uppercase;
+    width: fit-content;
+    margin-bottom: 20px;
+  }
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 10px #10b981;
+  }
+  h1 {
+    font-size: 50px;
+    font-weight: 900;
+    line-height: 1.08;
+    letter-spacing: -1.8px;
+    margin-bottom: 14px;
+  }
+  .title-highlight {
+    background: linear-gradient(135deg, #818cf8 0%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    font-size: 16px;
+    line-height: 1.55;
+    color: #94a3b8;
+    margin-bottom: 24px;
+    font-weight: 400;
+    max-width: 480px;
+  }
+  .feature-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(51, 65, 85, 0.8);
+    padding: 7px 13px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .right-col {
+    width: 420px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .device-mockup {
+    width: 400px;
+    background: linear-gradient(145deg, #131b2e 0%, #0c1222 100%);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    border-radius: 24px;
+    padding: 22px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(99, 102, 241, 0.15);
+    position: relative;
+  }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #1e293b;
+    padding-bottom: 14px;
+    margin-bottom: 16px;
+  }
+  .card-top-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #cbd5e1;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pill-status {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .goal-box {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid #334155;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .goal-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .goal-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f1f5f9;
+  }
+  .goal-weight {
+    background: #1e1b4b;
+    border: 1px solid #4f46e5;
+    color: #a5b4fc;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 6px;
+  }
+  .bar-bg {
+    width: 100%;
+    height: 7px;
+    background: #1e293b;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    width: 74%;
+    background: linear-gradient(90deg, #6366f1 0%, #10b981 100%);
+    border-radius: 999px;
+  }
+  .subtasks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 14px;
+    border-left: 2px solid #334155;
+    margin-left: 10px;
+  }
+  .subtask-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+  .subtask-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #e2e8f0;
+    font-weight: 500;
+  }
+  .check-done {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    background: #10b981;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #042f2e;
+    font-weight: 900;
+  }
+  .check-active {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1.5px solid #6366f1;
+  }
+  .sub-meta {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<div class="glow-left"></div>
+<div class="glow-right"></div>
+<div class="container">
+  <div class="left-col">
+    <div class="badge"><span class="dot"></span> Offline-First Strategic Engine</div>
+    <h1>Nested<br><span class="title-highlight">: Task Strategy</span></h1>
+    <p class="subtitle">Decompose monumental complexity into recursive execution trees. Assign dynamic weights that roll up your true strategic momentum.</p>
+    <div class="feature-tags">
+      <div class="tag">🌳 Recursive Nesting</div>
+      <div class="tag">⚖️ Dynamic Weighting</div>
+      <div class="tag">🔒 100% Offline & Private</div>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <div class="device-mockup">
+      <div class="card-top">
+        <span class="card-top-title">⚡ Strategic Momentum</span>
+        <span class="pill-status">74% Total</span>
+      </div>
+
+      <div class="goal-box">
+        <div class="goal-title-row">
+          <span class="goal-name">Q3 Launch & Go-To-Market</span>
+          <span class="goal-weight">Weight: 45%</span>
+        </div>
+        <div class="bar-bg">
+          <div class="bar-fill"></div>
+        </div>
+      </div>
+
+      <div class="subtasks">
+        <div class="subtask-item">
+          <div class="subtask-left">
+            <span class="check-done">✓</span>
+            <span>Core Architecture</span>
+          </div>
+          <span class="sub-meta" style="color: #34d399;">100% • W: 25%</span>
+        </div>
+
+        <div class="subtask-item">
+          <div class="subtask-left">
+            <span class="check-active"></span>
+            <span>Security & Signing Audit</span>
+          </div>
+          <span class="sub-meta" style="color: #818cf8;">65% • W: 35%</span>
+        </div>
+
+        <div class="subtask-item">
+          <div class="subtask-left">
+            <span class="check-active"></span>
+            <span>Early Access Rollout</span>
+          </div>
+          <span class="sub-meta" style="color: #38bdf8;">40% • W: 40%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
