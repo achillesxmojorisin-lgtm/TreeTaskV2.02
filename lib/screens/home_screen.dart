@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../widgets/tree_task_item.dart';
 import '../widgets/focus_breadcrumb.dart';
 import '../widgets/edit_task_dialog.dart';
+import '../widgets/strategy_insights_dialog.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -55,6 +56,14 @@ class HomeScreen extends StatelessWidget {
             tooltip: 'Collapse All',
             icon: const Icon(Icons.unfold_less, size: 20),
             onPressed: () => provider.setAllExpanded(false),
+          ),
+          IconButton(
+            tooltip: 'Strategy Insights & Feedback',
+            icon: const Icon(Icons.insights_rounded, size: 20),
+            onPressed: () => showDialog(
+              context: context,
+              builder: (_) => const StrategyInsightsDialog(),
+            ),
           ),
           IconButton(
             tooltip: 'Toggle Theme',

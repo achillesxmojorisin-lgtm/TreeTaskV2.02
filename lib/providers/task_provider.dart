@@ -76,6 +76,8 @@ class TaskProvider with ChangeNotifier {
     return count;
   }
 
+  TaskStrategyMetrics get strategyMetrics => TaskStrategyMetrics.compute(_tasks);
+
   Future<void> _init() async {
     _isDarkMode = await _storageService.loadThemeMode();
     _tasks = await _storageService.loadTasks();

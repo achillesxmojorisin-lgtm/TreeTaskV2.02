@@ -139,6 +139,26 @@ class TaskItem {
     };
   }
 
+  // Maximum nesting depth of this subtree (1 if leaf)
+  int get maxDepth {
+    if (children.isEmpty) return 1;
+    int maxChildDepth = 0;
+    for (final child in children) {
+      final d = child.maxDepth;
+      if (d > maxChildDepth) maxChildDepth = d;
+    }
+    return 1 + maxChildDepth;
+  }
+
+  // Flattened list of this item and all descendants
+  List<TaskItem> get allDescendantsAndSelf {
+    final list = <TaskItem>[this];
+    for (final child in children) {
+      list.addAll(child.allDescendantsAndSelf);
+    }
+    return list;
+  }
+
   factory TaskItem.fromJson(Map<String, dynamic> json) {
     var rawChildren = json['children'] as List<dynamic>?;
     List<TaskItem> parsedChildren = [];
@@ -159,6 +179,96 @@ class TaskItem {
       deadline: (json['deadline'] as num?)?.toInt(),
       isExpanded: json['isExpanded'] as bool? ?? true,
       children: parsedChildren,
+    );
+  }
+}
+
+class TaskStrategyMetrics {
+  final int totalTasks;
+  final int completedTasks;
+  final int maxDepth;
+  final double averageWeight;
+  final int minorCount; // 1-3
+  final int moderateCount; // 4-7
+  final int criticalCount; // 8-10
+
+  const TaskStrategyMetrics({
+    required this.totalTasks,
+    required this.completedTasks,
+    required this.maxDepth,
+    required this.averageWeight,
+    required this.minorCount,
+    required this.moderateCount,
+    required this.criticalCount,
+  });
+
+  double get minorPercent => totalTasks == 0 ? 0.0 : (minorCount / totalTasks) * 100;
+  double get moderatePercent => totalTasks == 0 ? 0.0 : (moderateCount / totalTasks) * 100;
+  double get criticalPercent => totalTasks == 0 ? 0.0 : (criticalCount / totalTasks) * 100;
+  double get completionRate => totalTasks == 0 ? 0.0 : (completedTasks / totalTasks) * 100;
+
+  String toDiagnosticString() {
+    return 'Nested v2.1.0 Diagnostics [Zero PII]\n'
+        '• Max Depth: Level $maxDepth\n'
+        '• Total Tasks: $totalTasks ($completedTasks completed, ${completionRate.toStringAsFixed(1)}%)\n'
+        '• Average Effort Weight: ${averageWeight.toStringAsFixed(1)} / 10\n'
+        '• Tiers: Minor ${minorPercent.toStringAsFixed(0)}% | Moderate ${moderatePercent.toStringAsFixed(0)}% | Critical ${criticalPercent.toStringAsFixed(0)}%';
+  }
+
+  factory TaskStrategyMetrics.compute(List<TaskItem> roots) {
+    if (roots.isEmpty) {
+      return const TaskStrategyMetrics(
+        totalTasks: 0,
+        completedTasks: 0,
+        maxDepth: 0,
+        averageWeight: 0.0,
+        minorCount: 0,
+        moderateCount: 0,
+        criticalCount: 0,
+      );
+    }
+
+    int maxD = 0;
+    for (final r in roots) {
+      final d = r.maxDepth;
+      if (d > maxD) maxD = d;
+    }
+
+    final allTasks = <TaskItem>[];
+    for (final r in roots) {
+      allTasks.addAll(r.allDescendantsAndSelf);
+    }
+
+    int completed = 0;
+    int totalWeight = 0;
+    int minor = 0;
+    int moderate = 0;
+    int critical = 0;
+
+    for (final t in allTasks) {
+      if (t.isDone || (t.children.isNotEmpty && t.progress >= 0.999)) {
+        completed++;
+      }
+      totalWeight += t.weight;
+      if (t.weight <= 3) {
+        minor++;
+      } else if (t.weight <= 7) {
+        moderate++;
+      } else {
+        critical++;
+      }
+    }
+
+    final avgWeight = allTasks.isEmpty ? 0.0 : totalWeight / allTasks.length;
+
+    return TaskStrategyMetrics(
+      totalTasks: allTasks.length,
+      completedTasks: completed,
+      maxDepth: maxD,
+      averageWeight: avgWeight,
+      minorCount: minor,
+      moderateCount: moderate,
+      criticalCount: critical,
     );
   }
 }
