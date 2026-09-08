@@ -61,27 +61,6 @@ def configure():
             f.write("package com.studioxanywhere.nested\n\nimport io.flutter.embedding.android.FlutterActivity\n\nclass MainActivity: FlutterActivity() {\n}\n")
         print("[Signing] Ensured MainActivity.kt exists.")
 
-    # Step 4: Patch root android/build.gradle to enforce API 36 across all subprojects
-    root_gradle = "android/build.gradle"
-    if os.path.exists(root_gradle):
-        with open(root_gradle, "r", encoding="utf-8") as f:
-            rg = f.read()
-        if "compileSdkVersion 36" not in rg:
-            subprojects_rule = """
-subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            project.android {
-                compileSdkVersion 36
-            }
-        }
-    }
-}
-"""
-            rg += subprojects_rule
-            with open(root_gradle, "w", encoding="utf-8") as f:
-                f.write(rg)
-            print("[Signing] Added compileSdkVersion 36 enforcement for all subprojects in android/build.gradle.")
 
     # Step 5: Patch android/app/build.gradle (Groovy DSL)
     build_gradle = "android/app/build.gradle"
