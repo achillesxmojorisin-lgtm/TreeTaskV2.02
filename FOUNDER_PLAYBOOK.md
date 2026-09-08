@@ -134,7 +134,34 @@ We loved the core concept of combining **infinite recursive nesting with weighte
 
 ---
 
-## 5. Cleaning Up Your Trial Accounts
+## 5. Release Management Strategy (New Versions vs In-Place Updates)
+
+The automated GitHub Actions workflow (`.github/workflows/main.yml`) supports two operating modes:
+
+### Mode 1: Creating a New Version Release (Permanent Version History)
+Whenever you introduce a major feature, new capability, or milestone:
+1. Bump `version:` in `pubspec.yaml` (e.g. `2.2.0+4`).
+2. Tag and push to GitHub:
+   ```bash
+   git tag v2.2.0
+   git push origin v2.2.0
+   ```
+   *Alternatively*: Go to GitHub Actions ➔ click "Build Nested: Task Strategy" ➔ "Run workflow" ➔ enter `v2.2.0`.
+3. GitHub Actions automatically compiles `app-release.apk` and `app-release.aab`, creates a new release entry `v2.2.0`, and lists it at the top of the Releases tab while **permanently preserving all past versions** (`v2.1.0`, `v2.0.0`, etc.).
+
+### Mode 2: In-Place Update (Same Release, No Version Bump)
+Whenever you push minor fixes, tweaks, or updates that do *not* require a new version number:
+1. Simply commit and push your changes to `main`:
+   ```bash
+   git commit -m "fix: minor UI alignment adjustment"
+   git push origin main
+   ```
+2. GitHub Actions detects that no new tag was created, automatically finds the current active release (e.g. `v2.1.0`), and **replaces the binaries (`app-release.apk` and `app-release.aab`) in-place** inside that existing release using `--clobber`.
+3. No duplicate release entry is generated; users downloading from the latest release always get your most up-to-date binaries.
+
+---
+
+## 6. Cleaning Up Your Trial Accounts
 
 Once you have verified that your permanent GitHub repository has the code and the Actions run produces your artifacts:
 1. Go to your temporary GitHub account (`achillesxmojorisin-lgtm`).
