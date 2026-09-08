@@ -1,4 +1,4 @@
-name: Build Nested: Task Strategy (APK & AAB)
+name: "Build Nested: Task Strategy (APK and AAB)"
 
 on:
   push:

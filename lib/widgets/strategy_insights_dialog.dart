@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/task_item.dart';
@@ -65,7 +65,7 @@ class StrategyInsightsDialog extends StatelessWidget {
                 Expanded(
                   child: _MetricCard(
                     title: 'Max Depth',
-                    value: 'Level ',
+                    value: 'Level ${metrics.maxDepth}',
                     subtitle: 'Hierarchy depth',
                     icon: Icons.account_tree_outlined,
                     color: AppTheme.primary,
@@ -76,7 +76,7 @@ class StrategyInsightsDialog extends StatelessWidget {
                 Expanded(
                   child: _MetricCard(
                     title: 'Avg Weight',
-                    value: '/10',
+                    value: '${metrics.averageWeight.toStringAsFixed(1)}/10',
                     subtitle: 'Mean effort score',
                     icon: Icons.scale_outlined,
                     color: AppTheme.weightMedium,
@@ -91,8 +91,8 @@ class StrategyInsightsDialog extends StatelessWidget {
                 Expanded(
                   child: _MetricCard(
                     title: 'Total Units',
-                    value: '',
-                    subtitle: ' completed (%)',
+                    value: '${metrics.totalTasks}',
+                    subtitle: '${metrics.completedTasks} completed (${metrics.completionRate.toStringAsFixed(0)}%)',
                     icon: Icons.checklist_rtl_rounded,
                     color: AppTheme.weightLow,
                     isDark: isDark,
@@ -102,7 +102,7 @@ class StrategyInsightsDialog extends StatelessWidget {
                 Expanded(
                   child: _MetricCard(
                     title: 'Weighted Score',
-                    value: '%',
+                    value: '${(provider.overallProgress * 100).toStringAsFixed(0)}%',
                     subtitle: 'Total branch progress',
                     icon: Icons.pie_chart_outline_rounded,
                     color: AppTheme.primaryLight,
@@ -331,7 +331,7 @@ class _TierLegend extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Text(
-          ' (%)',
+          '$label (${percent.toStringAsFixed(0)}%)',
           style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w500),
         ),
       ],
