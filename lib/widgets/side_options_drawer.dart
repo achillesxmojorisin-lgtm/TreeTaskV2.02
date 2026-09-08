@@ -127,7 +127,7 @@ class _SideOptionsDrawerState extends State<SideOptionsDrawer> {
 
   void _exportTasksJson(BuildContext context, TaskProvider provider) {
     try {
-      final jsonList = provider.rootTasks.map((t) => t.toJson()).toList();
+      final jsonList = provider.tasks.map((t) => t.toJson()).toList();
       final jsonStr = const JsonEncoder.withIndent('  ').convert(jsonList);
       Clipboard.setData(ClipboardData(text: jsonStr));
       ScaffoldMessenger.of(context).showSnackBar(

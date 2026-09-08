@@ -22,6 +22,7 @@ class TaskProvider with ChangeNotifier {
 
   // Getters
   List<TaskItem> get tasks => _tasks;
+  List<TaskItem> get rootTasks => _tasks;
   List<TaskItem> get breadcrumbStack => _breadcrumbStack;
   bool get isDarkMode => _isDarkMode;
   String get searchQuery => _searchQuery;
