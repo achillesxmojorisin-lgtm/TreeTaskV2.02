@@ -6,6 +6,7 @@ import '../widgets/tree_task_item.dart';
 import '../widgets/focus_breadcrumb.dart';
 import '../widgets/edit_task_dialog.dart';
 import '../widgets/strategy_insights_dialog.dart';
+import '../widgets/side_options_drawer.dart';
 import 'local_insights_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -19,6 +20,7 @@ class HomeScreen extends StatelessWidget {
     final currentTasks = provider.currentViewTasks;
 
     return Scaffold(
+      endDrawer: const SideOptionsDrawer(),
       appBar: AppBar(
         title: Row(
           children: [
@@ -58,12 +60,11 @@ class HomeScreen extends StatelessWidget {
             icon: const Icon(Icons.unfold_less, size: 20),
             onPressed: () => provider.setAllExpanded(false),
           ),
-          IconButton(
-            tooltip: 'Local Insights (See Your Own Data)',
-            icon: const Icon(Icons.insights_rounded, size: 20),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const LocalInsightsScreen()),
+          Builder(
+            builder: (ctx) => IconButton(
+              tooltip: 'Ideas, Feedback & Options',
+              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 20),
+              onPressed: () => Scaffold.of(ctx).openEndDrawer(),
             ),
           ),
           IconButton(
@@ -150,52 +151,79 @@ class HomeScreen extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
                     child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 54,
-                                  height: 54,
-                                  child: CircularProgressIndicator(
-                                    value: provider.overallProgress,
-                                    strokeWidth: 6,
-                                    backgroundColor: theme.colorScheme.outline.withOpacity(0.3),
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      provider.overallProgress >= 0.999 ? AppTheme.secondary : AppTheme.primary,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  '${(provider.overallProgress * 100).toInt()}%',
-                                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LocalInsightsScreen()),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              Stack(
+                                alignment: Alignment.center,
                                 children: [
-                                  const Text(
-                                    'Overall Completion',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '${provider.totalRootProjects} Projects ? ${provider.totalTasksCount} Total Tasks',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                  SizedBox(
+                                    width: 54,
+                                    height: 54,
+                                    child: CircularProgressIndicator(
+                                      value: provider.overallProgress,
+                                      strokeWidth: 6,
+                                      backgroundColor: theme.colorScheme.outline.withOpacity(0.3),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        provider.overallProgress >= 0.999 ? AppTheme.secondary : AppTheme.primary,
+                                      ),
                                     ),
+                                  ),
+                                  Text(
+                                    '${(provider.overallProgress * 100).toInt()}%',
+                                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Overall Completion',
+                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.primary.withOpacity(0.12),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: const Text(
+                                            'Insights →',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppTheme.primary,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${provider.totalRootProjects} Projects • ${provider.totalTasksCount} Total Tasks',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

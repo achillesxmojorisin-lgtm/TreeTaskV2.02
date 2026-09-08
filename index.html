@@ -400,6 +400,178 @@
       font-weight: 700;
       font-size: 13px;
     }
+
+    /* Slide-in Side Panel (~25% width on desktop, responsive) */
+    .side-panel-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 150;
+    }
+    .side-panel-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .side-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      height: 100vh;
+      width: clamp(320px, 25vw, 420px);
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      box-shadow: -12px 0 45px rgba(0, 0, 0, 0.55);
+      z-index: 160;
+      transform: translateX(100%);
+      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+    @media (max-width: 768px) {
+      .side-panel {
+        width: 88vw;
+        max-width: 360px;
+      }
+    }
+    .side-panel.open {
+      transform: translateX(0);
+    }
+    .side-panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .side-panel-header h2 {
+      font-size: 16px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .side-panel-body {
+      padding: 18px 20px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .side-section {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .side-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .category-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .cat-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 11px;
+      border-radius: 18px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .cat-pill:hover {
+      border-color: var(--primary-light);
+      color: var(--text);
+    }
+    .cat-pill.active {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: var(--primary);
+      color: #fff;
+      font-weight: 700;
+    }
+    .side-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .side-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .side-actions-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .side-btn {
+      flex: 1;
+      min-width: 110px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+    .side-btn-primary {
+      background: var(--primary);
+      border: none;
+      color: #fff;
+    }
+    .side-btn-primary:hover {
+      background: var(--primary-light);
+    }
+    .side-btn-secondary {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .side-btn-secondary:hover {
+      background: var(--surface-hover);
+      border-color: var(--text-muted);
+    }
+    .toast-msg {
+      font-size: 11px;
+      color: var(--secondary);
+      font-weight: 700;
+      display: none;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+    }
   </style>
 </head>
 <body>
@@ -424,6 +596,9 @@
         </button>
         <button class="btn-icon" title="Collapse All Branches" onclick="toggleAll(false)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="10" y1="14" x2="3" y2="21"></line></svg>
+        </button>
+        <button class="btn-icon" id="btnOpenSidePanel" title="Ideas, Feedback & Options" onclick="openSidePanel()" aria-label="Ideas, Feedback and Options">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><circle cx="9" cy="10" r="1" fill="currentColor"></circle><circle cx="12" cy="10" r="1" fill="currentColor"></circle><circle cx="15" cy="10" r="1" fill="currentColor"></circle></svg>
         </button>
       </div>
     </header>
@@ -572,6 +747,145 @@
       </div>
     </div>
   </div>
+
+  <!-- Slide-in Side Panel (~25% of full screen, responsive) -->
+  <div class="side-panel-overlay" id="sidePanelOverlay" onclick="closeSidePanel()"></div>
+  <aside class="side-panel" id="sidePanel" role="dialog" aria-modal="true" aria-label="Ideas, Feedback & Options">
+    <div class="side-panel-header">
+      <div>
+        <h2>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          Ideas & Options
+        </h2>
+        <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Feedback &bull; Diagnostics &bull; Strategy Tools</span>
+      </div>
+      <button class="action-btn" onclick="closeSidePanel()" aria-label="Close Side Panel">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <div class="side-panel-body">
+      <!-- Direct Message Box (Ideas, Requests, Bugs) -->
+      <div class="side-section">
+        <div class="side-section-title">
+          <span>Direct Founder Dialogue</span>
+          <span style="font-size: 9px; background: rgba(16,185,129,0.15); color: var(--secondary); padding: 2px 6px; border-radius: 6px;">Zero PII</span>
+        </div>
+        <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+          Have an idea, need a feature, or spotted a bug? Send your thoughts directly to the developers with one tap.
+        </p>
+
+        <!-- Category Selector Pills -->
+        <div class="category-pills">
+          <button type="button" class="cat-pill active" data-cat="idea" onclick="selectFeedbackCategory('idea')">💡 Idea / Request</button>
+          <button type="button" class="cat-pill" data-cat="bug" onclick="selectFeedbackCategory('bug')">🐛 Bug Report</button>
+          <button type="button" class="cat-pill" data-cat="feedback" onclick="selectFeedbackCategory('feedback')">💬 Feedback</button>
+        </div>
+
+        <input type="text" class="side-input" id="fbSubject" placeholder="Summary (e.g. Add recurring tasks or CSV export)...">
+        <textarea class="side-input" id="fbMessage" rows="4" placeholder="Describe what you'd like to see, or details of the issue you encountered..."></textarea>
+
+        <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 11px; color: var(--text-muted); cursor: pointer; user-select: none;">
+          <input type="checkbox" id="chkIncludeStats" checked style="accent-color: var(--primary); margin-top: 2px;">
+          <span>Attach anonymous strategy diagnostics (Archetype, tasks, depth, avg weight &mdash; zero task names)</span>
+        </label>
+
+        <div class="side-actions-row">
+          <button type="button" class="side-btn side-btn-primary" onclick="copyFeedbackMessage()" id="btnCopyFeedback" title="Copy formatted message to clipboard">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copy Message
+          </button>
+          <button type="button" class="side-btn side-btn-secondary" onclick="openGitHubIssuePrefilled()" title="Open new issue on GitHub">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+            GitHub Issue
+          </button>
+          <button type="button" class="side-btn side-btn-secondary" onclick="sendEmailFeedback()" title="Email the developer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            Email
+          </button>
+        </div>
+        <div class="toast-msg" id="feedbackToast">✓ Message copied to clipboard! Ready to paste anywhere.</div>
+      </div>
+
+      <!-- Quick Strategy Snapshot -->
+      <div class="side-section">
+        <div class="side-section-title">
+          <span>Strategy Snapshot</span>
+          <span id="sideArchetypeBadge" style="font-size: 10px; color: var(--primary-light); font-weight: 700;">Balanced Strategist</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(99,102,241,0.06); padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(99,102,241,0.2);">
+          <div>
+            <div id="sideCompletionScore" style="font-size: 16px; font-weight: 800; color: #fff;">0% Completed</div>
+            <div id="sideDepthStats" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Level 1 &bull; 0 Tasks</div>
+          </div>
+          <button type="button" class="btn-secondary" style="padding: 7px 11px; font-size: 11px; white-space: nowrap;" onclick="closeSidePanel(); openInsightsModal();">
+            Full Insights &rarr;
+          </button>
+        </div>
+      </div>
+
+      <!-- Strategic Effort Weights Reference Guide -->
+      <div class="side-section">
+        <div class="side-section-title">
+          <span>Effort Weights Philosophy</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 11px; line-height: 1.4;">
+          <div style="display: flex; align-items: flex-start; gap: 8px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--weight-low); margin-top: 4px; flex-shrink: 0;"></span>
+            <div>
+              <strong style="color: var(--weight-low);">1–3 Minor:</strong> Quick wins, small errands (&lt; 1 hour).
+            </div>
+          </div>
+          <div style="display: flex; align-items: flex-start; gap: 8px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--weight-med); margin-top: 4px; flex-shrink: 0;"></span>
+            <div>
+              <strong style="color: var(--weight-med);">4–7 Moderate:</strong> Core workload, feature milestones (half-day to days).
+            </div>
+          </div>
+          <div style="display: flex; align-items: flex-start; gap: 8px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--weight-high); margin-top: 4px; flex-shrink: 0;"></span>
+            <div>
+              <strong style="color: var(--weight-high);">8–10 Critical:</strong> High-impact architecture, pivotal deliverables.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Strategy Data Management -->
+      <div class="side-section">
+        <div class="side-section-title">
+          <span>Data Tools & Backup</span>
+        </div>
+        <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+          Export your entire task hierarchy as offline JSON or restore from a previous backup file.
+        </p>
+        <div class="side-actions-row">
+          <button type="button" class="side-btn side-btn-secondary" onclick="exportTasksJson()" title="Download JSON backup">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Export JSON
+          </button>
+          <button type="button" class="side-btn side-btn-secondary" onclick="importTasksJson()" title="Import JSON backup">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Import JSON
+          </button>
+        </div>
+        <button type="button" class="side-btn side-btn-secondary" style="color: #ef4444; border-color: rgba(239,68,68,0.3);" onclick="clearCompletedSubtasks()">
+          Clear Completed Subtasks
+        </button>
+        <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="handleJsonFileSelect(event)">
+      </div>
+
+      <!-- Trust, Privacy & Lineage Footer -->
+      <div style="margin-top: auto; padding-top: 10px; font-size: 11px; color: var(--text-muted); text-align: center; display: flex; flex-direction: column; gap: 6px;">
+        <div>🛡️ <strong>100% On-Device &bull; Zero Telemetry</strong></div>
+        <div>
+          <a href="privacy.html" style="color: var(--primary-light); text-decoration: none;">Privacy Policy</a> &bull;
+          <a href="https://github.com/studioxanywhere-hub/Nested-TaskStrategy" target="_blank" rel="noopener" style="color: var(--primary-light); text-decoration: none;">GitHub Repo</a>
+        </div>
+        <div style="font-size: 10px; color: rgba(255,255,255,0.3);">Nested: Task Strategy v2.1.0</div>
+      </div>
+    </div>
+  </aside>
 
   <script>
     const ICONS = {
@@ -961,6 +1275,25 @@
       }
     }
 
+    function openSidePanel() {
+      const panel = document.getElementById('sidePanel');
+      const overlay = document.getElementById('sidePanelOverlay');
+      if (panel && overlay) {
+        panel.classList.add('open');
+        overlay.classList.add('active');
+        updateSidePanelStats();
+      }
+    }
+
+    function closeSidePanel() {
+      const panel = document.getElementById('sidePanel');
+      const overlay = document.getElementById('sidePanelOverlay');
+      if (panel && overlay) {
+        panel.classList.remove('open');
+        overlay.classList.remove('active');
+      }
+    }
+
     function getMaxTreeDepth(taskList) {
       if (!taskList || taskList.length === 0) return 0;
       let maxDepth = 0;
@@ -982,7 +1315,7 @@
       return res;
     }
 
-    function computeAndRenderInsights() {
+    function getDiagnosticsData() {
       const allTasks = getAllFlattenedTasks(tasks);
       const maxDepth = getMaxTreeDepth(tasks);
       const totalUnits = allTasks.length;
@@ -1014,7 +1347,6 @@
       const pctMod = totalUnits === 0 ? 0 : Math.round((moderate / totalUnits) * 100);
       const pctCrit = totalUnits === 0 ? 0 : Math.round((critical / totalUnits) * 100);
 
-      // Determine Archetype
       let archetype = 'Strategic Novice';
       let archetypeDesc = 'Start adding and nesting tasks to unlock your strategy profile.';
       if (totalUnits > 0) {
@@ -1033,96 +1365,244 @@
         }
       }
 
-      document.getElementById('statArchetype').innerText = archetype;
-      document.getElementById('statArchetypeDesc').innerText = archetypeDesc;
-      document.getElementById('statOverallScoreBadge').innerText = `${overallScore}% Score`;
+      return {
+        allTasks,
+        maxDepth,
+        totalUnits,
+        completedCount,
+        completionRate,
+        overallScore,
+        avgWeight,
+        minor,
+        moderate,
+        critical,
+        pctMinor,
+        pctMod,
+        pctCrit,
+        milestones,
+        milestonesDone,
+        archetype,
+        archetypeDesc
+      };
+    }
 
-      document.getElementById('statMaxDepth').innerText = `Level ${maxDepth}`;
-      document.getElementById('statAvgWeight').innerText = `${avgWeight} / 10`;
-      document.getElementById('statMilestones').innerText = `${milestonesDone} / ${milestones}`;
-      document.getElementById('statTotalUnits').innerText = `${totalUnits} Tasks`;
-      document.getElementById('statCompletedRate').innerText = `${completedCount} completed (${completionRate}%)`;
+    function computeAndRenderInsights() {
+      const diag = getDiagnosticsData();
 
-      document.getElementById('barMinor').style.width = `${pctMinor}%`;
-      document.getElementById('barModerate').style.width = `${pctMod}%`;
-      document.getElementById('barCritical').style.width = `${pctCrit}%`;
+      document.getElementById('statArchetype').innerText = diag.archetype;
+      document.getElementById('statArchetypeDesc').innerText = diag.archetypeDesc;
+      document.getElementById('statOverallScoreBadge').innerText = `${diag.overallScore}% Score`;
 
-      document.getElementById('lblMinor').innerText = `${pctMinor}%`;
-      document.getElementById('lblModerate').innerText = `${pctMod}%`;
-      document.getElementById('lblCritical').innerText = `${pctCrit}%`;
+      document.getElementById('statMaxDepth').innerText = `Level ${diag.maxDepth}`;
+      document.getElementById('statAvgWeight').innerText = `${diag.avgWeight} / 10`;
+      document.getElementById('statMilestones').innerText = `${diag.milestonesDone} / ${diag.milestones}`;
+      document.getElementById('statTotalUnits').innerText = `${diag.totalUnits} Tasks`;
+      document.getElementById('statCompletedRate').innerText = `${diag.completedCount} completed (${diag.completionRate}%)`;
+
+      document.getElementById('barMinor').style.width = `${diag.pctMinor}%`;
+      document.getElementById('barModerate').style.width = `${diag.pctMod}%`;
+      document.getElementById('barCritical').style.width = `${diag.pctCrit}%`;
+
+      document.getElementById('lblMinor').innerText = `${diag.pctMinor}%`;
+      document.getElementById('lblModerate').innerText = `${diag.pctMod}%`;
+      document.getElementById('lblCritical').innerText = `${diag.pctCrit}%`;
+    }
+
+    function updateSidePanelStats() {
+      try {
+        const diag = getDiagnosticsData();
+        const badge = document.getElementById('sideArchetypeBadge');
+        if (badge) badge.innerText = diag.archetype;
+        const score = document.getElementById('sideCompletionScore');
+        if (score) score.innerText = `${diag.completionRate}% Completed`;
+        const depth = document.getElementById('sideDepthStats');
+        if (depth) depth.innerText = `Level ${diag.maxDepth} • ${diag.totalUnits} Tasks`;
+      } catch (err) {
+        console.error('Error updating side panel stats:', err);
+      }
     }
 
     function copyAnonymousDiagnostics() {
-      const allTasks = getAllFlattenedTasks(tasks);
-      const maxDepth = getMaxTreeDepth(tasks);
-      const totalUnits = allTasks.length;
-      let completedCount = 0;
-      let totalWeight = 0;
-      let minor = 0, moderate = 0, critical = 0;
-      let milestones = 0, milestonesDone = 0;
-
-      for (const t of allTasks) {
-        const prog = calculateProgress(t);
-        const isDone = (t.isDone || prog >= 0.999);
-        if (isDone) completedCount++;
-        totalWeight += (t.weight || 5);
-        if (t.weight <= 3) minor++;
-        else if (t.weight <= 7) moderate++;
-        else critical++;
-
-        if (t.weight >= 8 || (t.children && t.children.length > 0)) {
-          milestones++;
-          if (isDone) milestonesDone++;
-        }
-      }
-
-      const avgWeight = totalUnits === 0 ? '0.0' : (totalWeight / totalUnits).toFixed(1);
-      const completionRate = totalUnits === 0 ? 0 : Math.round((completedCount / totalUnits) * 100);
-      const pctMinor = totalUnits === 0 ? 0 : Math.round((minor / totalUnits) * 100);
-      const pctMod = totalUnits === 0 ? 0 : Math.round((moderate / totalUnits) * 100);
-      const pctCrit = totalUnits === 0 ? 0 : Math.round((critical / totalUnits) * 100);
-
-      let archetype = 'Strategic Novice';
-      if (totalUnits > 0) {
-        if (maxDepth >= 4) archetype = 'Deep Architect';
-        else if (pctCrit >= 40) archetype = 'High-Impact Focus';
-        else if (pctMinor >= 50) archetype = 'Agile Sprinter';
-        else archetype = 'Balanced Strategist';
-      }
-
+      const diag = getDiagnosticsData();
       const text = `Nested: Task Strategy Local Insights [Zero PII]\n` +
-        `• Archetype: ${archetype}\n` +
-        `• Average Task Weight: ${avgWeight} / 10\n` +
-        `• Deepest Nested Level: Level ${maxDepth}\n` +
-        `• Milestones Completed: ${milestonesDone} / ${milestones}\n` +
-        `• Total Tasks: ${totalUnits} (${completedCount} completed, ${completionRate}%)\n` +
-        `• Effort Tiers: Minor ${pctMinor}% | Moderate ${pctMod}% | Critical ${pctCrit}%\n` +
+        `• Archetype: ${diag.archetype}\n` +
+        `• Average Task Weight: ${diag.avgWeight} / 10\n` +
+        `• Deepest Nested Level: Level ${diag.maxDepth}\n` +
+        `• Milestones Completed: ${diag.milestonesDone} / ${diag.milestones}\n` +
+        `• Total Tasks: ${diag.totalUnits} (${diag.completedCount} completed, ${diag.completionRate}%)\n` +
+        `• Effort Tiers: Minor ${diag.pctMinor}% | Moderate ${diag.pctMod}% | Critical ${diag.pctCrit}%\n` +
         `• 100% computed on-device with zero tracking or telemetry.`;
 
       navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById('btnCopyDiag');
-        const orig = btn.innerText;
-        btn.innerText = 'Copied!';
-        btn.style.color = 'var(--secondary)';
-        setTimeout(() => {
-          btn.innerText = orig;
-          btn.style.color = '';
-        }, 2000);
+        if (btn) {
+          const orig = btn.innerText;
+          btn.innerText = 'Copied!';
+          btn.style.color = 'var(--secondary)';
+          setTimeout(() => {
+            btn.innerText = orig;
+            btn.style.color = '';
+          }, 2000);
+        }
       });
     }
 
-    // Close modals on outside click or Escape key
+    let selectedFeedbackCategory = 'idea';
+    function selectFeedbackCategory(cat) {
+      selectedFeedbackCategory = cat;
+      const pills = document.querySelectorAll('.cat-pill');
+      pills.forEach(p => {
+        if (p.getAttribute('data-cat') === cat) {
+          p.classList.add('active');
+        } else {
+          p.classList.remove('active');
+        }
+      });
+
+      const subInput = document.getElementById('fbSubject');
+      const msgInput = document.getElementById('fbMessage');
+      if (cat === 'idea') {
+        if (subInput) subInput.placeholder = 'Summary (e.g. Add recurring tasks or CSV export)...';
+        if (msgInput) msgInput.placeholder = 'Describe your idea, use case, or feature request...';
+      } else if (cat === 'bug') {
+        if (subInput) subInput.placeholder = 'Bug summary (e.g. Subtask does not collapse)...';
+        if (msgInput) msgInput.placeholder = 'Describe what happened, expected behavior, and steps to reproduce...';
+      } else {
+        if (subInput) subInput.placeholder = 'Subject...';
+        if (msgInput) msgInput.placeholder = 'Share your thoughts, suggestions, or general feedback...';
+      }
+    }
+
+    function buildFormattedFeedback() {
+      const subject = (document.getElementById('fbSubject')?.value || '').trim();
+      const message = (document.getElementById('fbMessage')?.value || '').trim();
+      const includeStats = document.getElementById('chkIncludeStats')?.checked ?? true;
+
+      const catLabel = selectedFeedbackCategory === 'idea' ? 'Feature Request / Idea' :
+                       selectedFeedbackCategory === 'bug' ? 'Bug Report' : 'User Feedback';
+
+      let text = `### [Nested ${catLabel}] ${subject || 'Untitled'}\n\n`;
+      text += `${message || 'No description provided.'}\n\n`;
+
+      if (includeStats) {
+        const diag = getDiagnosticsData();
+        text += `---\n`;
+        text += `**Anonymous Strategy Diagnostics (Zero PII)**:\n`;
+        text += `- **Strategy Profile**: ${diag.archetype}\n`;
+        text += `- **Total Tasks**: ${diag.totalUnits} (${diag.completedCount} completed, ${diag.completionRate}%)\n`;
+        text += `- **Max Nesting Depth**: Level ${diag.maxDepth}\n`;
+        text += `- **Average Task Weight**: ${diag.avgWeight} / 10\n`;
+        text += `- **Effort Tiers**: Minor ${diag.pctMinor}% | Moderate ${diag.pctMod}% | Critical ${diag.pctCrit}%\n`;
+        text += `- **Platform**: Web (Nested: Task Strategy v2.1.0)\n`;
+      }
+      return { subject: subject || `Nested: ${catLabel}`, body: text };
+    }
+
+    function copyFeedbackMessage() {
+      const fb = buildFormattedFeedback();
+      const textToCopy = `${fb.subject}\n\n${fb.body}`;
+
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        const toast = document.getElementById('feedbackToast');
+        if (toast) {
+          toast.style.display = 'flex';
+          setTimeout(() => { toast.style.display = 'none'; }, 3500);
+        }
+      }).catch(err => {
+        alert('Could not copy automatically. Please copy your text directly.');
+      });
+    }
+
+    function openGitHubIssuePrefilled() {
+      const fb = buildFormattedFeedback();
+      const title = encodeURIComponent(fb.subject);
+      const body = encodeURIComponent(fb.body);
+      const url = `https://github.com/studioxanywhere-hub/Nested-TaskStrategy/issues/new?title=${title}&body=${body}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
+    function sendEmailFeedback() {
+      const fb = buildFormattedFeedback();
+      const subject = encodeURIComponent(fb.subject);
+      const body = encodeURIComponent(fb.body);
+      const mailto = `mailto:studioxanywhere@gmail.com?subject=${subject}&body=${body}`;
+      window.location.href = mailto;
+    }
+
+    function exportTasksJson() {
+      const dataStr = JSON.stringify(tasks, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `nested-tasks-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function importTasksJson() {
+      const input = document.getElementById('jsonFileInput');
+      if (input) input.click();
+    }
+
+    function handleJsonFileSelect(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (Array.isArray(imported)) {
+            tasks = imported;
+            renderTree();
+            updateSidePanelStats();
+            alert('Tasks successfully restored from backup!');
+          } else {
+            alert('Invalid backup format: root must be an array of tasks.');
+          }
+        } catch (err) {
+          alert('Failed to parse JSON file: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function clearCompletedSubtasks() {
+      if (!confirm('Are you sure you want to remove all completed subtasks? Active tasks will be preserved.')) return;
+      function pruneCompleted(list) {
+        return list
+          .filter(t => !t.isDone)
+          .map(t => {
+            const copy = { ...t };
+            if (copy.children && copy.children.length > 0) {
+              copy.children = pruneCompleted(copy.children);
+            }
+            return copy;
+          });
+      }
+      tasks = pruneCompleted(tasks);
+      renderTree();
+      updateSidePanelStats();
+    }
+
+    // Close modals and side panel on outside click or Escape key
     window.addEventListener('click', (e) => {
       const insightsModal = document.getElementById('insightsModal');
       if (e.target === insightsModal) closeInsightsModal();
       const taskModal = document.getElementById('taskModal');
       if (e.target === taskModal) closeModal();
+      const sidePanelOverlay = document.getElementById('sidePanelOverlay');
+      if (e.target === sidePanelOverlay) closeSidePanel();
     });
 
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeInsightsModal();
         closeModal();
+        closeSidePanel();
       }
     });
 
