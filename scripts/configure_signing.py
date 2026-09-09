@@ -68,6 +68,26 @@ def configure():
             f.write("package com.studioxanywhere.nested\n\nimport io.flutter.embedding.android.FlutterActivity\n\nclass MainActivity: FlutterActivity() {\n}\n")
         print("[Signing] Ensured MainActivity.kt exists.")
 
+    # Step 4: Ensure android/local.properties contains flutter.versionCode and flutter.versionName
+    loc_props_path = "android/local.properties"
+    existing_props = ""
+    if os.path.exists(loc_props_path):
+        with open(loc_props_path, "r", encoding="utf-8") as f:
+            existing_props = f.read()
+
+    if "flutter.versionCode=" in existing_props:
+        existing_props = re.sub(r"^[ \t]*flutter\.versionCode=.*$", f"flutter.versionCode={VERSION_CODE}", existing_props, flags=re.MULTILINE)
+    else:
+        existing_props += f"\nflutter.versionCode={VERSION_CODE}\n"
+
+    if "flutter.versionName=" in existing_props:
+        existing_props = re.sub(r"^[ \t]*flutter\.versionName=.*$", f"flutter.versionName={VERSION_NAME}", existing_props, flags=re.MULTILINE)
+    else:
+        existing_props += f"flutter.versionName={VERSION_NAME}\n"
+
+    with open(loc_props_path, "w", encoding="utf-8") as f:
+        f.write(existing_props.strip() + "\n")
+    print(f"[Signing] Ensured flutter.versionCode={VERSION_CODE} and flutter.versionName={VERSION_NAME} in android/local.properties.")
 
     # Step 5: Patch android/app/build.gradle (Groovy DSL)
     build_gradle = "android/app/build.gradle"
@@ -99,17 +119,23 @@ def configure():
             c
         )
 
-        # Enforce exact package name, API 36, and version
-        c = re.sub(r'applicationId\s+["\'][^"\']+["\']', f'applicationId "{PACKAGE_NAME}"', c)
-        c = re.sub(r'namespace\s+["\'][^"\']+["\']', f'namespace "{PACKAGE_NAME}"', c)
-        
-        # Match any compileSdkVersion / compileSdk format
-        c = re.sub(r'compileSdkVersion\s+.*', 'compileSdkVersion 36', c)
-        c = re.sub(r'compileSdk\s*=.*', 'compileSdk = 36', c)
-        c = re.sub(r'targetSdkVersion\s+.*', 'targetSdkVersion 36', c)
-        c = re.sub(r'targetSdk\s*=.*', 'targetSdk = 36', c)
-        c = re.sub(r'versionCode\s+.*', f'versionCode {VERSION_CODE}', c)
-        c = re.sub(r'versionName\s+.*', f'versionName "{VERSION_NAME}"', c)
+        # Enforce exact package name, API 36, and version using line-anchored regexes (NEVER match across newlines)
+        c = re.sub(r'^[ \t]*compileSdkVersion[ \t]+.*$', '    compileSdkVersion 36', c, flags=re.MULTILINE)
+        c = re.sub(r'^[ \t]*compileSdk[ \t]*=.*$', '    compileSdk = 36', c, flags=re.MULTILINE)
+        c = re.sub(r'^[ \t]*targetSdkVersion[ \t]+.*$', '        targetSdkVersion 36', c, flags=re.MULTILINE)
+        c = re.sub(r'^[ \t]*targetSdk[ \t]*=.*$', '        targetSdk = 36', c, flags=re.MULTILINE)
+        c = re.sub(r'^[ \t]*versionCode[ \t]*=.*$', f'        versionCode = {VERSION_CODE}', c, flags=re.MULTILINE)
+        c = re.sub(r'^[ \t]*versionCode[ \t]+[0-9a-zA-Z._()]+.*$', f'        versionCode {VERSION_CODE}', c, flags=re.MULTILINE)
+        c = re.sub(r'^[ \t]*versionName[ \t]*=.*$', f'        versionName = "{VERSION_NAME}"', c, flags=re.MULTILINE)
+        c = re.sub(r'^[ \t]*versionName[ \t]+[0-9a-zA-Z._()"\']+', f'        versionName "{VERSION_NAME}"', c, flags=re.MULTILINE)
+        c = re.sub(r'^[ \t]*applicationId[ \t]*=.*$', f'        applicationId = "{PACKAGE_NAME}"', c, flags=re.MULTILINE)
+        c = re.sub(r'^[ \t]*applicationId[ \t]+["\'][^"\']+["\']', f'        applicationId "{PACKAGE_NAME}"', c, flags=re.MULTILINE)
+        c = re.sub(r'^[ \t]*namespace[ \t]*=.*$', f'    namespace = "{PACKAGE_NAME}"', c, flags=re.MULTILINE)
+        c = re.sub(r'^[ \t]*namespace[ \t]+["\'][^"\']+["\']', f'    namespace "{PACKAGE_NAME}"', c, flags=re.MULTILINE)
+
+        # Fallback: if versionCode is missing from defaultConfig, explicitly inject it
+        if "versionCode" not in c and "defaultConfig {" in c:
+            c = c.replace("defaultConfig {", f"defaultConfig {{\n        versionCode {VERSION_CODE}\n        versionName \"{VERSION_NAME}\"")
 
         with open(build_gradle, "w", encoding="utf-8") as f:
             f.write(c)
@@ -138,26 +164,52 @@ def configure():
             "signingConfig = signingConfigs.getByName(\"release\")",
             c_kts
         )
-        c_kts = re.sub(r'compileSdk(Version)?\s*=.*', 'compileSdk = 36', c_kts)
-        c_kts = re.sub(r'targetSdk(Version)?\s*=.*', 'targetSdk = 36', c_kts)
-        c_kts = re.sub(r'applicationId\s*=\s*["\'][^"\']+["\']', f'applicationId = "{PACKAGE_NAME}"', c_kts)
-        c_kts = re.sub(r'namespace\s*=\s*["\'][^"\']+["\']', f'namespace = "{PACKAGE_NAME}"', c_kts)
-        c_kts = re.sub(r'versionCode\s*=.*', f'versionCode = {VERSION_CODE}', c_kts)
-        c_kts = re.sub(r'versionName\s*=.*', f'versionName = "{VERSION_NAME}"', c_kts)
+        c_kts = re.sub(r'^[ \t]*compileSdk(Version)?[ \t]*=.*$', '    compileSdk = 36', c_kts, flags=re.MULTILINE)
+        c_kts = re.sub(r'^[ \t]*targetSdk(Version)?[ \t]*=.*$', '        targetSdk = 36', c_kts, flags=re.MULTILINE)
+        c_kts = re.sub(r'^[ \t]*versionCode[ \t]*=.*$', f'        versionCode = {VERSION_CODE}', c_kts, flags=re.MULTILINE)
+        c_kts = re.sub(r'^[ \t]*versionName[ \t]*=.*$', f'        versionName = "{VERSION_NAME}"', c_kts, flags=re.MULTILINE)
+        c_kts = re.sub(r'^[ \t]*applicationId[ \t]*=.*$', f'        applicationId = "{PACKAGE_NAME}"', c_kts, flags=re.MULTILINE)
+        c_kts = re.sub(r'^[ \t]*namespace[ \t]*=.*$', f'    namespace = "{PACKAGE_NAME}"', c_kts, flags=re.MULTILINE)
+
+        if "versionCode" not in c_kts and "defaultConfig {" in c_kts:
+            c_kts = c_kts.replace("defaultConfig {", f"defaultConfig {{\n        versionCode = {VERSION_CODE}\n        versionName = \"{VERSION_NAME}\"")
 
         with open(build_gradle_kts, "w", encoding="utf-8") as f:
             f.write(c_kts)
         print(f"[Signing] Successfully patched android/app/build.gradle.kts with API 36, {PACKAGE_NAME}, v{VERSION_NAME}+{VERSION_CODE}!")
 
-    # Step 7: Ensure AndroidManifest.xml package matches
+    # Step 7: Ensure AndroidManifest.xml package and versionCode/versionName match
     manifest_path = "android/app/src/main/AndroidManifest.xml"
     if os.path.exists(manifest_path):
         with open(manifest_path, "r", encoding="utf-8") as f:
             m = f.read()
         m = re.sub(r'package\s*=\s*["\'][^"\']+["\']', f'package="{PACKAGE_NAME}"', m)
+
+        if 'android:versionCode=' in m:
+            m = re.sub(r'android:versionCode\s*=\s*"[^"]*"', f'android:versionCode="{VERSION_CODE}"', m)
+        else:
+            m = re.sub(r'<manifest\b', f'<manifest android:versionCode="{VERSION_CODE}"', m, count=1)
+
+        if 'android:versionName=' in m:
+            m = re.sub(r'android:versionName\s*=\s*"[^"]*"', f'android:versionName="{VERSION_NAME}"', m)
+        else:
+            m = re.sub(r'<manifest\b', f'<manifest android:versionName="{VERSION_NAME}"', m, count=1)
+
         with open(manifest_path, "w", encoding="utf-8") as f:
             f.write(m)
-        print(f"[Signing] Ensured package='{PACKAGE_NAME}' in AndroidManifest.xml.")
+        print(f"[Signing] Ensured package='{PACKAGE_NAME}', versionCode='{VERSION_CODE}', versionName='{VERSION_NAME}' in AndroidManifest.xml.")
+
+    # Step 8: Verification of critical parameters
+    verified = False
+    for path in [build_gradle, build_gradle_kts]:
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+            if str(VERSION_CODE) in content and "36" in content and PACKAGE_NAME in content:
+                print(f"[Signing] Verified {path} contains version {VERSION_CODE}, API 36, and package {PACKAGE_NAME}.")
+                verified = True
+    if not verified:
+        print("[Signing] WARNING: Could not verify all parameters in build gradle files!")
 
     print(f"[Signing] Release signing configuration complete for {PACKAGE_NAME} v{VERSION_NAME}+{VERSION_CODE}. Ready to build!")
 
